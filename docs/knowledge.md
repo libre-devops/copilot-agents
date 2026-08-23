@@ -83,6 +83,28 @@ MDX is stripped to prose and code (fenced blocks are kept verbatim, since for a 
 they are the most valuable part) and JSON is pretty printed, because Agent Builder accepts
 `.doc .docx .ppt .pptx .xls .xlsx .txt .pdf` and not Markdown or JSON.
 
+### Keeping the standards, repointing the modules
+
+The common case is simpler than rebranding: the content is fine, but the Terraform modules it tells
+you to use live in your registry rather than the public one. Say where, in your profile:
+
+```yaml
+module_sources:
+  libre-devops/logic-app-workflow/azurerm: app.terraform.io/acme/logic-app-workflow/azapi
+```
+
+```bash
+uv run just localise-knowledge
+```
+
+Both the `source = "..."` address and its `registry.terraform.io/modules/...` documentation link are
+rewritten, because a module on a private registry has no page on the public one. Anything not listed
+is left alone. No branding changes unless your profile's tokens differ from the defaults, so this
+works perfectly well on an otherwise untouched checkout.
+
+This is the answer when you are happy to use the shipped standards and only the internal specifics
+differ: your registry, your module names, your fork of a module.
+
 ### When the standards are already yours
 
 If you wrote the Libre DevOps standards and are adopting them internally under another name, you do

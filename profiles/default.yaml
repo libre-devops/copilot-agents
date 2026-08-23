@@ -36,3 +36,13 @@ app_ids:
   terraform-author: 6e73821a-ca55-46b1-b239-756d4c768a32
   logic-app-author: 9707f0fe-14fe-454e-afb0-22e3f0116882
   agent-author: 67215524-85b2-4b5c-b516-cb02dfc69653
+
+# If you maintain your own copy of a module referenced by the standards, say where it lives and
+# `just localise-knowledge` repoints both the source address and its documentation link. Anything
+# not listed here is left alone, because the published address really resolves.
+#
+# module_sources:
+#   libre-devops/logic-app-workflow/azurerm: app.terraform.io/acme/logic-app-workflow/azapi
+#   libre-devops/logic-app-standard/azurerm: app.terraform.io/acme/logic-app-standard/azurerm
+#   libre-devops/monitor-alerts/azurerm: app.terraform.io/acme/monitor-alerts/azurerm
+module_sources: {}

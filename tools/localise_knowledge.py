@@ -64,6 +64,26 @@ def load_tokens(profile: str) -> dict[str, str]:
     }
 
 
+def module_mapping(module_sources: dict[str, str]) -> dict[str, str]:
+    """Repoint Terraform module addresses at your own registry.
+
+    The default is to leave `libre-devops/<module>/<provider>` alone, because those modules really
+    are published there and renaming them would send readers to a module that does not exist. That
+    is the right default for a fork. It is the wrong one when you maintain your own copy of the
+    module at a different address, so a profile can say where each one now lives.
+
+    Both the bare source address and the registry.terraform.io/modules/... documentation URL are
+    rewritten, since a module on a private registry has no page at the public one.
+    """
+    mapping: dict[str, str] = {}
+    for old, new in (module_sources or {}).items():
+        if not new:
+            continue
+        mapping[f"registry.terraform.io/modules/{old}"] = str(new)
+        mapping[old] = str(new)
+    return mapping
+
+
 def build_mapping(tokens: dict[str, str]) -> dict[str, str]:
     """Prose branding only.
 
@@ -103,7 +123,9 @@ def main() -> int:
     args = parser.parse_args()
 
     tokens = load_tokens(args.profile)
-    mapping = build_mapping(tokens)
+    profile_data = yaml.safe_load((PROFILES / f"{args.profile}.yaml").read_text(encoding="utf-8")) or {}
+    modules = module_mapping(profile_data.get("module_sources", {}))
+    mapping = {**build_mapping(tokens), **modules}
     if not mapping:
         print(f"profiles/{args.profile}.yaml carries no branding to apply.", file=sys.stderr)
         return 1
@@ -111,8 +133,15 @@ def main() -> int:
     print(f"\nLocalising the standards using profiles/{args.profile}.yaml\n")
     for key, value in sorted(mapping.items(), key=lambda kv: len(kv[0]), reverse=True):
         print(f"  {key:<18} -> {value}")
-    print("\n  Left alone: libre-devops/<module>/<provider> registry sources and the Source: lines,")
-    print("  because those addresses really exist and must keep resolving.\n")
+    if modules:
+        print("\n  Module addresses repointed at your registry:")
+        for old, new in sorted(modules.items(), key=lambda kv: len(kv[0]), reverse=True):
+            if not old.startswith("registry.terraform.io"):
+                print(f"    {old}\n      -> {new}")
+    remaining = "any other" if modules else "libre-devops/<module>/<provider>"
+    print(f"\n  Left alone: {remaining} registry sources and the Source: lines, because those")
+    print("  addresses really exist and must keep resolving. Add them to module_sources in the")
+    print("  profile if you maintain your own copy.\n")
 
     written: dict[str, list[str]] = {}
     for name, owner in PACK_OWNERS.items():
