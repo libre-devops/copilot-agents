@@ -42,6 +42,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
+AGENTS = ROOT / "agents"
 KNOWLEDGE = ROOT / "knowledge"
 LOCAL = KNOWLEDGE / "local"
 PROFILES = ROOT / "profiles"
@@ -124,6 +125,32 @@ def rewrite(text: str, mapping: dict[str, str]) -> tuple[str, int]:
     return pattern.sub(swap, text), count
 
 
+def agent_knowledge(agent_id: str) -> list[str]:
+    """What this agent currently ships, so an override can replace rather than truncate.
+
+    knowledge_files in a profile replaces the agent's list outright. Printing only the localised
+    documents would therefore silently drop everything else the agent needs, which for the Logic App
+    agent is the entire Workflow Definition Language reference and both AzApi documents.
+    """
+    path = AGENTS / agent_id / "agent.yaml"
+    if not path.is_file():
+        return []
+    raw = path.read_text(encoding="utf-8")
+    files: list[str] = []
+    collecting = False
+    for line in raw.splitlines():
+        if line.startswith("knowledge_files:"):
+            collecting = True
+            continue
+        if collecting:
+            stripped = line.strip()
+            if stripped.startswith("- "):
+                files.append(stripped[2:].strip())
+            elif stripped and not stripped.startswith("#"):
+                break
+    return files
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Rebrand the shipped standards into knowledge/local/.")
     parser.add_argument("--profile", default="default", help="profile to take the branding from")
@@ -177,7 +204,7 @@ def main() -> int:
             (destination / target_name).write_text(updated, encoding="utf-8")
         shown = destination if owning else Path("knowledge/local")
         print(f"  {name}: {count} replacement(s) -> {shown}/{target_name}")
-        written.setdefault(owner, []).append(f"local/{target_name}")
+        written.setdefault(owner, {})[name] = f"local/{target_name}"
 
     if not written:
         print("\nNothing to localise.\n")
@@ -195,11 +222,14 @@ def main() -> int:
 
     print(f"\nAdd this to the bottom of profiles/{args.profile}.yaml:\n")
     print("agent_overrides:")
-    for owner, files in written.items():
+    for owner, swaps in written.items():
+        # The full list, with the localised copies swapped in. An override replaces rather than
+        # merges, so anything omitted here would be dropped from the agent.
+        current = agent_knowledge(owner) or list(swaps)
         print(f"  {owner}:")
         print("    knowledge_files:")
-        for name in files:
-            print(f"      - {name}")
+        for original in current:
+            print(f"      - {swaps.get(original, original)}")
     print("\nThen: uv run just render && uv run just lint\n")
     return 0
 
