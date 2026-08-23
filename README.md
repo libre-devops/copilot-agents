@@ -310,6 +310,11 @@ Two things it deliberately does not touch: `knowledge/*.txt`, because those are 
 published documents and rewriting their text would falsify them, and its own source, because its
 search strings are the very words it is replacing.
 
+If the standards **are** yours and you are adopting them under a new name, `just localise-knowledge`
+is the deliberate exception: it rebrands the prose into `knowledge/local/` while preserving the real
+Terraform registry module addresses, which would otherwise start pointing at modules that do not
+exist.
+
 ## Repository layout
 
 | Path | What it holds |

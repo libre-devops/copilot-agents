@@ -237,9 +237,18 @@ def build_capabilities(agent_id: str, spec: dict, embedded: bool, profile: dict)
                     )
                 if "?" in url:
                     fail(agent_id, f"WebSearch site URL must not carry a query string: {url}")
-                segments = [s for s in url.split("://", 1)[-1].split("/")[1:] if s]
+                head, _, tail = url.partition("://")
+                host_and_path = tail or head
+                host = host_and_path.split("/")[0]
+                segments = [s for s in host_and_path.split("/")[1:] if s]
                 if len(segments) > 2:
-                    fail(agent_id, f"WebSearch site URL takes at most two path segments: {url}")
+                    suggestion = "/".join([host, *segments[:2]])
+                    fail(
+                        agent_id,
+                        f"WebSearch site URL has {len(segments)} path segments and the limit is two: "
+                        f"{url}\n         Use https://{suggestion} instead, or drop the site and "
+                        "ground this agent in uploaded knowledge files (see docs/knowledge.md).",
+                    )
         if name == "TeamsMessages" and len(cap.get("urls", [])) > MAX_TEAMS_URLS:
             fail(agent_id, f"TeamsMessages exceeds {MAX_TEAMS_URLS} urls")
 
@@ -791,7 +800,13 @@ def main() -> int:
                     elif fresh[name] != live[name]:
                         drifted.append(f"rendered/{agent_id}/{name} (differs)")
             if drifted:
-                print("\nERROR rendered/ is stale. Run `just render` and commit:", file=sys.stderr)
+                print(
+                    "\nERROR rendered/ does not match a fresh render. If you just edited a profile "
+                    "or a fragment,\n      that is expected: run `just render` to update it "
+                    "(then commit it, which is what CI checks).",
+                    file=sys.stderr,
+                )
+                print("\nStale:", file=sys.stderr)
                 for key in drifted:
                     print(f"  {key}", file=sys.stderr)
                 return 1

@@ -83,6 +83,30 @@ MDX is stripped to prose and code (fenced blocks are kept verbatim, since for a 
 they are the most valuable part) and JSON is pretty printed, because Agent Builder accepts
 `.doc .docx .ppt .pptx .xls .xlsx .txt .pdf` and not Markdown or JSON.
 
+### When the standards are already yours
+
+If you wrote the Libre DevOps standards and are adopting them internally under another name, you do
+not need new documents. Rebrand the shipped ones:
+
+```bash
+uv run just localise-knowledge          # uses profiles/default.yaml
+uv run just localise-knowledge --profile acme
+```
+
+It applies your profile's branding to the prose and writes the result into `knowledge/local/`, which
+is gitignored, leaving the upstream packs untouched so `just update-knowledge` still works. It then
+prints the `agent_overrides` block to paste.
+
+Two things it will not rewrite, and the reason matters:
+
+- **`libre-devops/<module>/<provider>` Terraform registry sources.** Those modules really are
+  published at that address. Renaming them would have the agent recommend a module that does not
+  exist, which is worse than leaving the original name visible.
+- **The `Source:` provenance line**, so it stays possible to see where a document came from.
+
+`rebrand` leaves `knowledge/*.txt` alone entirely, because rewriting a document you did not write
+would falsify it. This is the deliberate exception for when you did.
+
 ### Using your own standards
 
 The quickest route is to let the wizard import them:

@@ -72,6 +72,12 @@ new-profile-quick name:
 rebrand *args:
     uv run tools/rebrand.py {{args}}
 
+# Rebrand the shipped standards into knowledge/local/ using a profile's branding. For when the
+# standards are yours and you are adopting them internally under a different name. Leaves the
+# upstream packs and the real registry module addresses untouched.
+localise-knowledge *args:
+    uv run tools/localise_knowledge.py {{args}}
+
 # Refresh the knowledge packs agents upload into Agent Builder, from knowledge/sources.yaml.
 update-knowledge:
     uv run tools/fetch_knowledge.py
