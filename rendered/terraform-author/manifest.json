@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.18/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.18",
+  "version": "0.0.1",
+  "id": "6e73821a-ca55-46b1-b239-756d4c768a32",
+  "developer": {
+    "name": "Libre DevOps",
+    "websiteUrl": "https://libredevops.org",
+    "privacyUrl": "https://github.com/libre-devops/copilot-agents#privacy",
+    "termsOfUseUrl": "https://github.com/libre-devops/copilot-agents/blob/main/LICENSE"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "LDO Terraform",
+    "full": "Libre DevOps Terraform Author"
+  },
+  "description": {
+    "short": "Writes Terraform to the Libre DevOps standard.",
+    "full": "Writes and reviews Terraform modules and workspace configurations to the Libre DevOps Terraform Standard and Azure Naming Convention. Enforces the file split, for_each over count, the this label, argument ordering, typed variables with validation, and pinned providers. Cites the provider documentation for every argument it emits and never claims to have run the gates."
+  },
+  "accentColor": "#15803D",
+  "copilotAgents": {
+    "declarativeAgents": [
+      {
+        "id": "terraform-author",
+        "file": "declarativeAgent.json"
+      }
+    ]
+  }
+}

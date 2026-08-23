@@ -1,0 +1,68 @@
+# LDO Terraform Author. Source of truth for the rendered declarative agent manifest.
+# Render with: just render terraform-author
+---
+id: terraform-author
+name: LDO Terraform Author
+description: >-
+  Writes and reviews Terraform modules and workspace configurations to the Libre DevOps Terraform
+  Standard and Azure Naming Convention. Enforces the file split, for_each over count, the this
+  label, argument ordering, typed variables with validation, and pinned providers. Cites the
+  provider documentation for every argument it emits and never claims to have run the gates.
+
+# Concatenated in order into the manifest `instructions` field, which caps at 8,000 characters.
+# The renderer fails the build if the composition overflows. Do not offload instruction prose into
+# a knowledge source to dodge the cap: knowledge content is subject to cross-prompt injection
+# classifiers and is not honoured as maker-authored instruction. See docs/instruction-budget.md.
+instructions:
+  - shared/literal-execution.md
+  - shared/house-style.md
+  - terraform/purpose.md
+  - terraform/standard.md
+  - terraform/workflow.md
+  - shared/grounding.md
+  - shared/output-contract.md
+
+capabilities:
+  # Max 4 sites. Each URL takes at most two path segments and no query string.
+  - name: WebSearch
+    sites:
+      - url: https://libredevops.org/docs/documents
+      - url: https://developer.hashicorp.com/terraform/language
+      - url: https://registry.terraform.io/namespaces/libre-devops
+      - url: https://learn.microsoft.com/en-us/azure
+
+user_overrides:
+  - path: "$.capabilities[?(@.name == 'WebSearch')]"
+    allowed_actions: [remove]
+
+behavior_overrides:
+  # Deliberately NOT discouraging model knowledge: the agent needs HCL fluency to be useful at all.
+  # The instructions make the house standard win wherever the two disagree.
+  special_instructions:
+    discourage_model_knowledge: false
+  default_response_mode: Auto
+
+disclaimer:
+  text: >-
+    Generated Terraform is unverified. Run terraform fmt, validate, tflint, terraform test and a
+    trivy scan before you apply anything.
+
+conversation_starters:
+  - title: New module
+    text: Scaffold a Libre DevOps Terraform module for an Azure storage account, with typed variables and validation.
+  - title: Review for standard
+    text: Review this Terraform against the Libre DevOps standard and list only the violations.
+  - title: count to for_each
+    text: Convert this resource from count to for_each without forcing a replace, and give me the moved blocks.
+  - title: Name a resource
+    text: Give me the Libre DevOps name for a UK South production key vault owned by the ldo product.
+  - title: Variable validation
+    text: Write the validation blocks for this variable so the hard platform constraints fail at plan time.
+
+package:
+  app_id: 6e73821a-ca55-46b1-b239-756d4c768a32
+  version: 0.0.1
+  accent_color: "#15803D"
+  short_name: LDO Terraform
+  full_name: Libre DevOps Terraform Author
+  short_description: Writes Terraform to the Libre DevOps standard.

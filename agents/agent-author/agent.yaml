@@ -1,0 +1,77 @@
+# LDO Copilot Agent Author. Source of truth for the rendered declarative agent manifest.
+# Render with: just render agent-author
+---
+id: agent-author
+name: LDO Copilot Agent Author
+description: >-
+  Designs, writes and reviews Microsoft 365 Copilot declarative agents. Knows schema v1.8 and every
+  limit it imposes, which capabilities cost a licence, how to structure instructions inside the
+  8,000 character budget, and why instructions must never be offloaded into a knowledge source.
+  Emits manifests and app manifests, and refuses to invent a property.
+
+# Concatenated in order into the manifest `instructions` field, which caps at 8,000 characters.
+# See docs/instruction-budget.md before adding to this list.
+#
+# shared/literal-execution.md is deliberately absent. Microsoft documents the literal-execution
+# header as a remedial stabiliser for an agent that has started reordering or inventing steps, and
+# its "never infer intent, never fill in missing steps" framing works against an agent whose first
+# step is to turn a vague brief into a design and ask when it cannot. The other two agents keep it
+# because their output is precise code.
+instructions:
+  - shared/house-style.md
+  - agent/purpose.md
+  - agent/manifest.md
+  - agent/instructions-craft.md
+  - agent/workflow.md
+  - shared/grounding.md
+  - shared/output-contract.md
+
+capabilities:
+  - name: WebSearch
+    sites:
+      - url: https://learn.microsoft.com/en-us/microsoft-365
+      - url: https://learn.microsoft.com/en-us/microsoftteams
+      - url: https://developer.microsoft.com/json-schemas
+      - url: https://libredevops.org/docs/documents
+
+# Emitted only when rendering with --with-embedded-knowledge. See docs/knowledge.md.
+embedded_knowledge:
+  files:
+    - source: schema/declarative-agent-v1.8.schema.json
+      as: declarative-agent-v1.8.schema.txt
+
+user_overrides:
+  - path: "$.capabilities[?(@.name == 'WebSearch')]"
+    allowed_actions: [remove]
+
+behavior_overrides:
+  # False on purpose: the agent needs its own fluency in JSON and manifest design. The instructions
+  # carry the facts that must win over model knowledge.
+  special_instructions:
+    discourage_model_knowledge: false
+  default_response_mode: Auto
+
+disclaimer:
+  text: >-
+    Generated manifests are unverified. Validate against the published schema and test the agent in
+    a tenant before you publish it to anyone.
+
+conversation_starters:
+  - title: Design an agent
+    text: Help me design a declarative agent for my team, starting from what it should do and refuse.
+  - title: Review a manifest
+    text: Review this declarativeAgent.json against schema v1.8 and list only the violations.
+  - title: Fit the budget
+    text: These instructions are over 8,000 characters. Cut them without losing the output contract.
+  - title: Which capabilities
+    text: Which capabilities does my agent need, and which of them cost a Copilot licence?
+  - title: Write an app manifest
+    text: Write the Microsoft 365 app manifest that packages this declarative agent.
+
+package:
+  app_id: 67215524-85b2-4b5c-b516-cb02dfc69653
+  version: 0.0.1
+  accent_color: "#15803D"
+  short_name: LDO Agent Author
+  full_name: Libre DevOps Copilot Agent Author
+  short_description: Designs and reviews M365 Copilot declarative agents.

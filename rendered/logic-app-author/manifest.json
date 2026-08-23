@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.18/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.18",
+  "version": "0.0.1",
+  "id": "9707f0fe-14fe-454e-afb0-22e3f0116882",
+  "developer": {
+    "name": "Libre DevOps",
+    "websiteUrl": "https://libredevops.org",
+    "privacyUrl": "https://github.com/libre-devops/copilot-agents#privacy",
+    "termsOfUseUrl": "https://github.com/libre-devops/copilot-agents/blob/main/LICENSE"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "LDO Logic App",
+    "full": "Libre DevOps Logic App Author"
+  },
+  "description": {
+    "short": "Writes Azure Logic App workflow definitions.",
+    "full": "Writes, repairs and reviews Azure Logic App workflow definitions in Workflow Definition Language. Knows the three export wrappers, the declaration versus value parameter split, that action names are stored keys, and the failure modes that pass validation and break at run time: a catch that reports Succeeded, do-until semantics, unsafe variables under a parallel Foreach, and de-duping union."
+  },
+  "accentColor": "#15803D",
+  "copilotAgents": {
+    "declarativeAgents": [
+      {
+        "id": "logic-app-author",
+        "file": "declarativeAgent.json"
+      }
+    ]
+  }
+}

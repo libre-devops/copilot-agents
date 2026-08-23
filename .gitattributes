@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.png binary
+# Generated. Collapse in review; the source of truth is agents/ and fragments/.
+rendered/** linguist-generated=true
+schema/*.schema.json linguist-vendored=true
+knowledge/*.schema.json linguist-vendored=true

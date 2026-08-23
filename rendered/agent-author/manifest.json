@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.18/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.18",
+  "version": "0.0.1",
+  "id": "67215524-85b2-4b5c-b516-cb02dfc69653",
+  "developer": {
+    "name": "Libre DevOps",
+    "websiteUrl": "https://libredevops.org",
+    "privacyUrl": "https://github.com/libre-devops/copilot-agents#privacy",
+    "termsOfUseUrl": "https://github.com/libre-devops/copilot-agents/blob/main/LICENSE"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "LDO Agent Author",
+    "full": "Libre DevOps Copilot Agent Author"
+  },
+  "description": {
+    "short": "Designs and reviews M365 Copilot declarative agents.",
+    "full": "Designs, writes and reviews Microsoft 365 Copilot declarative agents. Knows schema v1.8 and every limit it imposes, which capabilities cost a licence, how to structure instructions inside the 8,000 character budget, and why instructions must never be offloaded into a knowledge source. Emits manifests and app manifests, and refuses to invent a property."
+  },
+  "accentColor": "#15803D",
+  "copilotAgents": {
+    "declarativeAgents": [
+      {
+        "id": "agent-author",
+        "file": "declarativeAgent.json"
+      }
+    ]
+  }
+}

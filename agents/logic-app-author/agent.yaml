@@ -1,0 +1,73 @@
+# LDO Logic App Author. Source of truth for the rendered declarative agent manifest.
+# Render with: just render logic-app-author
+---
+id: logic-app-author
+name: LDO Logic App Author
+description: >-
+  Writes, repairs and reviews Azure Logic App workflow definitions in Workflow Definition Language.
+  Knows the three export wrappers, the declaration versus value parameter split, that action names
+  are stored keys, and the failure modes that pass validation and break at run time: a catch that
+  reports Succeeded, do-until semantics, unsafe variables under a parallel Foreach, and de-duping
+  union.
+
+# Concatenated in order into the manifest `instructions` field, which caps at 8,000 characters.
+# See docs/instruction-budget.md before adding to this list.
+instructions:
+  - shared/literal-execution.md
+  - shared/house-style.md
+  - logic-app/purpose.md
+  - logic-app/wdl.md
+  - logic-app/workflow.md
+  - shared/grounding.md
+  - shared/output-contract.md
+
+capabilities:
+  - name: WebSearch
+    sites:
+      - url: https://libredevops.org/docs/documents
+      - url: https://learn.microsoft.com/en-us/azure
+      - url: https://learn.microsoft.com/en-us/connectors
+
+# Emitted only when rendering with --with-embedded-knowledge. EmbeddedKnowledge is present in the
+# v1.8 schema but Microsoft's own 1.8 reference states embedded files are not enabled yet
+# (checked 2026-08-23). Default off so the shipped package is one the platform will accept.
+# Allowed types are .doc .docx .ppt .pptx .xls .xlsx .txt .pdf, max 10 files, 1 MB each, so the
+# workflow definition schema ships as .txt.
+embedded_knowledge:
+  files:
+    - source: knowledge/workflowdefinition.schema.json
+      as: workflowdefinition.schema.txt
+
+user_overrides:
+  - path: "$.capabilities[?(@.name == 'WebSearch')]"
+    allowed_actions: [remove]
+
+behavior_overrides:
+  special_instructions:
+    discourage_model_knowledge: false
+  default_response_mode: Auto
+
+disclaimer:
+  text: >-
+    Generated workflow definitions are unverified. WDL accepts most mistakes at save time and fails
+    at deploy or silently at run time. Validate the deployment before you trust it.
+
+conversation_starters:
+  - title: Fix my catch
+    text: This workflow reports Succeeded when the scope fails. Show me the runAfter and Terminate that make the failure visible.
+  - title: Unwrap this
+    text: Tell me which of the three export shapes this definition is, and return it as a bare definition.
+  - title: Paginate safely
+    text: Write an Until loop that pages an API, given that the body always runs at least once.
+  - title: Sentinel playbook
+    text: Draft a Consumption workflow triggered by a Sentinel incident that posts an enrichment comment.
+  - title: Review a definition
+    text: Review this definition against the Libre DevOps Logic App standard and list only the violations.
+
+package:
+  app_id: 9707f0fe-14fe-454e-afb0-22e3f0116882
+  version: 0.0.1
+  accent_color: "#15803D"
+  short_name: LDO Logic App
+  full_name: Libre DevOps Logic App Author
+  short_description: Writes Azure Logic App workflow definitions.

@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Render, drift gate and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # The drift gate. rendered/ is committed as the drop-in delivery path, so a change to a
+      # fragment or an agent definition that was not re-rendered fails here rather than shipping
+      # a manifest that does not match its source.
+      - name: Render and check for drift
+        run: uv run tools/render.py --check
+
+      - name: Lint rendered manifests
+        run: uv run tools/lint.py
+
+      - name: Regenerate icons and check for drift
+        run: |
+          uv run tools/make_icons.py
+          git diff --exit-code -- assets/
+
+      - name: Build app packages
+        run: uv run tools/render.py --package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-packages
+          path: dist/*.zip
+          if-no-files-found: error
+
+  schema-freshness:
+    name: Upstream schema drift
+    runs-on: ubuntu-latest
+    # Advisory only: Microsoft can revise a schema version in place, and we want to know without
+    # turning every upstream edit into a red build on unrelated pull requests.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare the vendored schema against the published one
+        run: |
+          curl -sS -fL -o /tmp/upstream.json \
+            https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.8/schema.json
+          # Compare parsed and key-sorted JSON, not bytes. Upstream serves CRLF and .gitattributes
+          # normalises the committed copy to LF, so a byte diff would fire on every run.
+          jq -S . /tmp/upstream.json > /tmp/upstream.norm.json
+          jq -S . schema/declarative-agent-v1.8.schema.json > /tmp/vendored.norm.json
+          if ! diff -q /tmp/vendored.norm.json /tmp/upstream.norm.json >/dev/null; then
+            echo "::warning::The published v1.8 schema differs from the vendored copy. Run 'just update-schema'."
+            diff -u /tmp/vendored.norm.json /tmp/upstream.norm.json | head -60 || true
+          else
+            echo "Vendored schema matches upstream."
+          fi
