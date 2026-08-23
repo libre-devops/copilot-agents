@@ -228,6 +228,13 @@ def build_capabilities(agent_id: str, spec: dict, embedded: bool, profile: dict)
                 fail(agent_id, f"WebSearch has {len(sites)} sites, the limit is {MAX_WEBSEARCH_SITES}")
             for site in sites:
                 url = site.get("url", "")
+                if url.count("://") > 1:
+                    fail(
+                        agent_id,
+                        f"WebSearch site URL has two schemes: {url}. A profile token written into "
+                        "the definition as https://{{token}} must not itself start with https://. "
+                        "Drop the scheme from the token value in your profile.",
+                    )
                 if "?" in url:
                     fail(agent_id, f"WebSearch site URL must not carry a query string: {url}")
                 segments = [s for s in url.split("://", 1)[-1].split("/")[1:] if s]
