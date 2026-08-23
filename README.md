@@ -77,10 +77,13 @@ by link. See [Build an agent in Agent Builder](#build-an-agent-in-agent-builder)
 Publishing under your own brand instead:
 
 ```bash
-just new-profile acme    # scaffolds profiles/acme.yaml with its own app id namespace
-$EDITOR profiles/acme.yaml
-just package acme        # writes dist/acme/<agent>-<version>.zip
+uv run just new-profile acme    # asks for each value, press Enter to accept the default
+uv run just package acme        # writes dist/acme/ and build/acme/
 ```
+
+`new-profile` prompts for the organisation name, URLs, colour and version, each with a default. You
+can hold Enter all the way through and still get a profile that renders, packages and lints; the
+placeholders sit on `example.invalid` so an unedited value is obvious rather than silently wrong.
 
 Profiles you add are gitignored by default, so your organisation's details cannot reach a public
 repository by accident. See [docs/profiles.md](./docs/profiles.md).
@@ -265,7 +268,7 @@ needs a licence or metered usage enabled in the tenant.
 | [`profiles/`](./profiles) | branding profiles: publisher, tokens, colour, app ids. Yours is gitignored |
 | [`fragments/`](./fragments) | instruction fragments, the single source for shared house rules |
 | [`rendered/`](./rendered) | generated manifests, icons and Agent Builder build guides, committed and drift gated, never hand edited |
-| [`knowledge/`](./knowledge) | factual grounding material, vendored |
+| [`knowledge/`](./knowledge) | the standards agents upload as knowledge, fetched by `just update-knowledge` |
 | [`schema/`](./schema) | the vendored declarative agent JSON schema, refreshed by `just update-schema` |
 | [`tools/`](./tools) | the renderer, the linter, and the icon generator |
 | [`docs/`](./docs) | the operating model, see below |

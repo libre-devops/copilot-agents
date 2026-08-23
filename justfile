@@ -49,16 +49,18 @@ check profile:
 profiles:
     @for f in profiles/*.yaml; do n=$(basename "$f" .yaml); printf '  %-12s %s\n' "$n" "$(grep -m1 'brand_name:' "$f" | cut -d: -f2- | xargs)"; done
 
-# Scaffold a new branding profile from the example, with its own app id namespace. The new file is
-# gitignored by default, so an internal profile cannot reach a public repository by accident.
+# Create a branding profile. Asks for each value with a sensible default: press Enter to accept.
+# The new file is gitignored, so an internal profile cannot reach a public repository by accident.
 new-profile name:
-    @test ! -e profiles/{{name}}.yaml || (echo "profiles/{{name}}.yaml already exists"; exit 1)
-    @ns=$(python3 -c "import uuid,sys; print(uuid.uuid5(uuid.NAMESPACE_DNS, sys.argv[1]))" "{{name}}.copilot-agents"); \
-      sed -e "s/^id: example$/id: {{name}}/" -e "s/^app_id_namespace: .*/app_id_namespace: $ns/" \
-          profiles/example.yaml > profiles/{{name}}.yaml; \
-      echo "Created profiles/{{name}}.yaml with app id namespace $ns"; \
-      echo "Edit its tokens and publisher block, then run: just package {{name}}"; \
-      echo "It is gitignored. To publish it, add an exception to .gitignore deliberately."
+    uv run tools/new_profile.py {{name}}
+
+# Same, but take every default without asking. Useful in a script.
+new-profile-quick name:
+    uv run tools/new_profile.py {{name}} --defaults
+
+# Refresh the knowledge packs agents upload into Agent Builder, from knowledge/sources.yaml.
+update-knowledge:
+    uv run tools/fetch_knowledge.py
 
 # Refresh the vendored declarative agent schema from Microsoft, then re-lint against it.
 update-schema:

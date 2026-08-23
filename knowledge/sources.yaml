@@ -1,0 +1,35 @@
+# Knowledge packs: the documents an agent uploads into Agent Builder as embedded knowledge.
+#
+# Fetched and converted by `just update-knowledge`, then committed as .txt so a render needs no
+# network. Agent Builder accepts .doc .docx .ppt .pptx .xls .xlsx .txt .pdf, which is why Markdown
+# and MDX are converted rather than shipped as-is.
+#
+# To ground agents in YOUR standards instead, point these at your own raw document URLs and re-run
+# `just update-knowledge`, or drop .txt files into knowledge/ by hand and list them in the agent
+# definition. See docs/knowledge.md.
+---
+sources:
+  - name: terraform-standards.txt
+    title: Libre DevOps Terraform Standard
+    url: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/documents/terraform-standards.mdx
+
+  - name: azure-naming-convention.txt
+    title: Libre DevOps Azure Naming Convention
+    url: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/documents/azure-naming-convention.mdx
+    # The abbreviation table on this page is rendered from a React component, so it is not in the
+    # MDX source and is not captured here. The name construction rules, which are the part an agent
+    # needs, are.
+
+  - name: azure-logic-app-standards.txt
+    title: Libre DevOps Azure Logic App Standard
+    url: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/documents/azure-logic-app-standards.mdx
+
+  - name: logic-app-workflow-definition-schema.txt
+    title: Azure Logic Apps workflow definition schema (2016-06-01)
+    url: https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json
+    format: json
+
+  - name: declarative-agent-schema.txt
+    title: Microsoft 365 declarative agent manifest schema v1.8
+    url: https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.8/schema.json
+    format: json

@@ -56,6 +56,7 @@ BUILD = ROOT / "build"
 DIST = ROOT / "dist"
 ASSETS = ROOT / "assets"
 PROFILES = ROOT / "profiles"
+KNOWLEDGE = ROOT / "knowledge"
 DEFAULT_PROFILE = "default"
 
 # {{token}} placeholders substituted from the profile. Chosen to avoid colliding with the manifest's
@@ -78,6 +79,7 @@ MAX_DISCLAIMER = 500
 MAX_WEBSEARCH_SITES = 4
 MAX_TEAMS_URLS = 5
 MAX_EMBEDDED_FILES = 10
+MAX_UPLOADED_FILES = 20  # Agent Builder's limit on uploaded knowledge files
 MAX_EMBEDDED_BYTES = 1_048_576
 EMBEDDED_SUFFIXES = {".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt", ".pdf"}
 
@@ -368,7 +370,9 @@ def build_app_manifest(agent_id: str, spec: dict, profile: dict) -> dict:
     }
 
 
-def build_guide(agent_id: str, da: dict, app: dict, profile: dict) -> str:
+def build_guide(
+    agent_id: str, da: dict, app: dict, profile: dict, knowledge: list[str]
+) -> str:
     """A paste-ready guide for Agent Builder, which has no import path.
 
     Agent Builder is a form. You cannot upload a declarativeAgent.json into it, so the only way to
@@ -432,6 +436,26 @@ def build_guide(agent_id: str, da: dict, app: dict, profile: dict) -> str:
         "",
     ]
 
+    if knowledge:
+        lines += [
+            "### Upload these files first",
+            "",
+            "Drag them from the `knowledge/` directory beside this guide into the **Knowledge**",
+            "section, or use the upload arrow. **These are the house standards and the agent is told",
+            "to trust them over anything it finds on the web or already knows.**",
+            "",
+        ]
+        lines += [f"- `knowledge/{f}`" for f in knowledge]
+        lines += [
+            "",
+            "> Uploaded knowledge needs a Microsoft 365 Copilot licence or metered usage. It is the",
+            "> only grounding route that needs no connector and no admin, and unlike web search it",
+            "> works for content that is not publicly indexed.",
+            "",
+            "### Then add the web sources",
+            "",
+        ]
+
     if sites:
         lines += [
             "In the **Knowledge** section choose **Enter URL** and add each of these, pressing Enter",
@@ -476,7 +500,7 @@ def build_guide(agent_id: str, da: dict, app: dict, profile: dict) -> str:
             lines += [f"- `{f}`" for f in files_]
             lines += ["", "> Uploaded knowledge needs a licence or metered usage.", ""]
 
-    if not sites and not any(
+    if not sites and not knowledge and not any(
         c.get("name") in ("OneDriveAndSharePoint", "GraphConnectors", "EmbeddedKnowledge")
         for c in da.get("capabilities", [])
     ):
@@ -582,6 +606,8 @@ def render_one(agent_id: str, profile: dict, embedded: bool, dest_root: Path) ->
 
     da = build_declarative_agent(agent_id, spec, instructions, embedded, profile)
     app = build_app_manifest(agent_id, spec, profile)
+    agent_override = (profile.get("agent_overrides") or {}).get(agent_id, {})
+    knowledge_files = agent_override.get("knowledge_files", spec.get("knowledge_files", []))
 
     # Wipe first. `--check` promises that rendered/ equals a fresh render, which is only true if
     # a file that is no longer produced also disappears (an embedded knowledge file left behind by
@@ -598,7 +624,7 @@ def render_one(agent_id: str, profile: dict, embedded: bool, dest_root: Path) ->
         files[filename] = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
     # The Agent Builder bridge. Not part of the app package: see package_one.
-    guide = build_guide(agent_id, da, app, profile)
+    guide = build_guide(agent_id, da, app, profile, knowledge_files)
     (out / "BUILD-GUIDE.md").write_text(guide, encoding="utf-8")
     files["BUILD-GUIDE.md"] = hashlib.sha256(guide.encode("utf-8")).hexdigest()
 
@@ -607,6 +633,30 @@ def render_one(agent_id: str, profile: dict, embedded: bool, dest_root: Path) ->
         if source.is_file():
             shutil.copyfile(source, out / icon)
             files[icon] = hashlib.sha256(source.read_bytes()).hexdigest()
+
+    # Knowledge files, staged next to the manifests so they can be dragged straight into Agent
+    # Builder. A profile may override the list per agent, because whose standards an agent is
+    # grounded in is a publisher decision.
+    override = (profile.get("agent_overrides") or {}).get(agent_id, {})
+    wanted = override.get("knowledge_files", spec.get("knowledge_files", []))
+    if len(wanted) > MAX_UPLOADED_FILES:
+        fail(agent_id, f"{len(wanted)} knowledge files, Agent Builder allows {MAX_UPLOADED_FILES}")
+    if wanted:
+        pack = out / "knowledge"
+        pack.mkdir(parents=True, exist_ok=True)
+        for name in wanted:
+            source = KNOWLEDGE / name
+            if not source.is_file():
+                fail(
+                    agent_id,
+                    f"knowledge file not found: knowledge/{name}. Run `just update-knowledge`, or "
+                    "drop the file in knowledge/ and list it in the agent definition.",
+                )
+            if Path(name).suffix.lower() not in EMBEDDED_SUFFIXES:
+                fail(agent_id, f"knowledge file type not supported by Agent Builder: {name}")
+            data = source.read_bytes()
+            (pack / name).write_bytes(data)
+            files[f"knowledge/{name}"] = hashlib.sha256(data).hexdigest()
 
     if embedded:
         for item in (spec.get("embedded_knowledge") or {}).get("files", []):

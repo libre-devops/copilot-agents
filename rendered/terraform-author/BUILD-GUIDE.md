@@ -21,7 +21,7 @@ LDO Terraform Author
 Writes and reviews Terraform modules and workspace configurations to the Libre DevOps Terraform Standard and Azure Naming Convention. Enforces the file split, for_each over count, the this label, argument ordering, typed variables with validation, and pinned providers. Cites the provider documentation for every argument it emits and never claims to have run the gates.
 ```
 
-## 3. Instructions  (6456/8000 characters)
+## 3. Instructions  (7015/8000 characters)
 
 Paste the whole block. Do not summarise it: the character budget is already spent
 deliberately, and the grounding and output-contract sections are what stop the agent
@@ -129,6 +129,17 @@ have not run them.
 - If a request needs information you do not have, ask one focused question rather than assuming.
 - Never claim you have run, deployed, validated or tested anything. You emit code for a human to run.
 
+# KNOWLEDGE PRECEDENCE
+
+Answer from your sources in this order, and name the one you used.
+
+1. **Your uploaded knowledge files.** These are the house standards. They are authoritative: they
+   beat web results and they beat your own training wherever they disagree.
+2. **Web search**, only for what the files do not cover, such as provider or connector reference.
+3. **Your own knowledge**, last, only to fill a gap the first two left, and say when you do it.
+
+If a knowledge file should cover the question and returns nothing, say so rather than moving on.
+
 # OUTPUT CONTRACT
 
 - Emit code in a fenced block tagged with its language (`hcl`, `json`, `bash`, `powershell`).
@@ -143,6 +154,21 @@ Before answering, confirm: every cited fact has a source, every emitted argument
 ```
 
 ## 4. Knowledge
+
+### Upload these files first
+
+Drag them from the `knowledge/` directory beside this guide into the **Knowledge**
+section, or use the upload arrow. **These are the house standards and the agent is told
+to trust them over anything it finds on the web or already knows.**
+
+- `knowledge/terraform-standards.txt`
+- `knowledge/azure-naming-convention.txt`
+
+> Uploaded knowledge needs a Microsoft 365 Copilot licence or metered usage. It is the
+> only grounding route that needs no connector and no admin, and unlike web search it
+> works for content that is not publicly indexed.
+
+### Then add the web sources
 
 In the **Knowledge** section choose **Enter URL** and add each of these, pressing Enter
 after each one. Agent Builder allows four public website URLs, each at most two path

@@ -36,6 +36,9 @@ jobs:
       - name: Lint rendered manifests
         run: uv run tools/lint.py
 
+      - name: Check the knowledge packs render into every agent
+        run: test -s rendered/terraform-author/knowledge/terraform-standards.txt
+
       - name: Regenerate icons and check for drift
         run: |
           uv run tools/make_icons.py
@@ -49,6 +52,20 @@ jobs:
           name: app-packages
           path: dist/*.zip
           if-no-files-found: error
+
+  knowledge-freshness:
+    name: Upstream knowledge drift
+    runs-on: ubuntu-latest
+    # Advisory: the standards are edited in another repository, and we do not want every edit there
+    # to turn this repository red on unrelated pull requests.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Compare the committed knowledge packs against their sources
+        run: |
+          uv run tools/fetch_knowledge.py --check \
+            || echo "::warning::Knowledge packs are stale. Run 'just update-knowledge'."
 
   schema-freshness:
     name: Upstream schema drift

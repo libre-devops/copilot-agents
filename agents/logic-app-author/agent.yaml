@@ -19,6 +19,7 @@ instructions:
   - logic-app/wdl.md
   - logic-app/workflow.md
   - shared/grounding.md
+  - shared/knowledge-precedence.md
   - shared/output-contract.md
 
 capabilities:
@@ -28,15 +29,14 @@ capabilities:
       - url: https://learn.microsoft.com/en-us/azure
       - url: https://learn.microsoft.com/en-us/connectors
 
-# Emitted only when rendering with --with-embedded-knowledge. EmbeddedKnowledge is present in the
-# v1.8 schema but Microsoft's own 1.8 reference states embedded files are not enabled yet
-# (checked 2026-08-23). Default off so the shipped package is one the platform will accept.
-# Allowed types are .doc .docx .ppt .pptx .xls .xlsx .txt .pdf, max 10 files, 1 MB each, so the
-# workflow definition schema ships as .txt.
-embedded_knowledge:
-  files:
-    - source: knowledge/workflowdefinition.schema.json
-      as: workflowdefinition.schema.txt
+
+# Uploaded into Agent Builder's Knowledge section, and copied into the rendered directory
+# ready to drag in. This is the grounding route that needs no connector and no admin: scoped
+# web search reads only what Bing indexes, so it cannot see private documentation.
+# Refresh the files with `just update-knowledge`. Max 20 files.
+knowledge_files:
+  - azure-logic-app-standards.txt
+  - logic-app-workflow-definition-schema.txt
 
 user_overrides:
   - path: "$.capabilities[?(@.name == 'WebSearch')]"

@@ -10,12 +10,17 @@ organisation's details ever appearing in a public commit.
 ## Publishing under your own brand
 
 ```bash
-just new-profile acme        # scaffolds profiles/acme.yaml with its own app id namespace
-$EDITOR profiles/acme.yaml   # set the tokens and the publisher block
-just package acme            # writes dist/acme/<agent>-<version>.zip
+uv run just new-profile acme     # asks for each value, Enter accepts the default
+uv run just package acme         # writes dist/acme/<agent>-<version>.zip
 ```
 
-Two commands and an edit. The rendered manifests land in `build/acme/`, the uploadable packages in
+Two commands. `new-profile` prompts for the organisation name, the URLs, the colour and the version,
+each with a default, so you can hold Enter and still get a profile that renders, packages and lints.
+Placeholder URLs sit on `example.invalid`, which RFC 2606 reserves so it can never resolve: an
+unedited value is then obvious in review rather than quietly wrong. Agent Builder does not check
+those URLs, so a placeholder is fine there; replace them before publishing an app package.
+
+Add `--defaults` (or use `just new-profile-quick`) to skip the questions entirely. The rendered manifests land in `build/acme/`, the uploadable packages in
 `dist/acme/`, and both are gitignored.
 
 ## Your profile will not be committed by accident
@@ -81,6 +86,21 @@ Quote any YAML value that *begins* with `{{`, otherwise the brace reads as a flo
 name: "{{brand_short}} Terraform Author"    # quoted, because it starts with a brace
 short_description: Writes Terraform to the {{brand_name}} standard.   # fine unquoted
 ```
+
+## Overriding knowledge
+
+A profile can swap which documents an agent is grounded in, so your standards never collide with
+upstream ones:
+
+```yaml
+agent_overrides:
+  terraform-author:
+    knowledge_files:
+      - our-terraform-standard.txt
+```
+
+Put the files in `knowledge/`, or declare their URLs in `knowledge/sources.yaml` and run
+`just update-knowledge`. See [knowledge.md](knowledge.md).
 
 ## Overriding capabilities
 

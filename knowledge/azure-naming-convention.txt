@@ -1,0 +1,109 @@
+Source: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/documents/azure-naming-convention.mdx
+Fetched by tools/fetch_knowledge.py. Do not edit by hand.
+
+# Libre DevOps Azure Naming Convention
+
+# Azure Naming Convention
+
+This is a reference guide for an opinionated Azure naming convention based on the [Microsoft Cloud Adoption Framework (CAF) recommended abbreviations](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations). It extends the official list with entries for sub-resources and resource types not covered by CAF, following the same pattern.
+
+---
+
+## Why a naming convention?
+
+Consistent resource naming is foundational to operating Azure at scale. As [Microsoft's CAF naming guidance](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/naming-and-tagging) explains, accurately naming resources is essential for security. When an incident occurs, you need to quickly identify affected systems, what they support, and the potential business impact. Services like Microsoft Defender for Cloud and Microsoft Sentinel reference resources by name in their alerts and dashboards.
+
+Azure enforces hard naming constraints per resource type: character limits, allowed characters, global uniqueness scopes, and names that cannot be changed after creation without destroying the resource. A convention needs to be established before deployment, not retrofitted later.
+
+---
+
+## Enforcement
+
+This document is a reference, not a tool. How you enforce the convention is up to you.
+
+The most practical approach is to enforce naming at the module level. In Terraform or Bicep, a module that constructs the resource name from structured inputs (infix, outfix, suffix, numbering) and passes the result to the resource leaves no room for ad-hoc overrides. Callers provide the parts; the module assembles and validates the name.
+
+For policy-layer enforcement, tools like [terraform-compliance](https://terraform-compliance.com/), Azure Policy, or custom CI checks can catch violations before resources are provisioned.
+
+---
+
+## Contributing
+
+This list is not exhaustive. Azure has hundreds of resource types and the [CAF abbreviations page](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations) does not cover all of them. Entries here that go beyond CAF are deliberate opinionated extensions.
+
+Some entries cover resource types that cannot be managed by Terraform, included so ARM, Bicep, and Pulumi users have a consistent reference.
+
+To contribute to the main copy:
+
+- Create a branch against `main` or raise an issue on [GitHub](https://github.com/libre-devops/azure-naming-convention)
+- Raise a pull request with your changes
+
+---
+
+## Resource name construction
+
+Names follow a structured pattern. Prefer alphanumeric characters and hyphens only - avoid underscores, dots, and mixed case unless the resource type requires it. Some resource types (storage accounts, VMs) prohibit hyphens entirely; their constructs omit dashes accordingly.
+
+| Naming element | Description | Example |
+|:-:|:--|:-:|
+| `Prefix` | Leftmost element. The resource type abbreviation from the [CAF abbreviations list](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations). Lower case. For resources named by role (VMs), the prefix describes purpose rather than type. | `rg-`, `sa`, `kv-` |
+| `Infix` | Immediately right of the prefix. A 2-4 letter code identifying the product, team, or service the resource belongs to. Lower case. | `ldo` (Libre DevOps), `hw` (hello-world) |
+| `Outfix` | Right of the infix. A 2-3 letter Azure region code. Lower case. Global resources use the owning resource group's region. | `uks` (UK South), `euw` (West Europe) |
+| `Suffix` | A 2-3 letter environment stage code. Lower case. | `poc`, `dev`, `tst`, `uat`, `ppd`, `prd` |
+| `Optional outfix` | Right of the suffix. A short functional qualifier, used only where it adds meaningful context. Lower case. | `mgt`, `sec`, `net` |
+| `Numbering` | Zero-padded three-digit ordinal appended at the end when multiple instances of the same resource exist (per current CAF guidance). | `001`, `002`, `010` |
+| `Full construct` | Dashed: `${prefix}-${infix}-${outfix}-${suffix}[-${optional}][-${numbering}]`. No-dash (storage accounts, VMs, etc.): `${prefix}${infix}${outfix}${suffix}[${optional}][${numbering}]`. | `rg-ldo-uks-prd`, `rg-crg-ukw-ppd-mgt`, `saldouksprd001` |
+
+---
+
+## Approved optional values
+
+| Category | Values | Example |
+|:-:|:--|:-:|
+| VM purpose prefixes | `app`, `dbs`, `web`, `dc`, `vm` | `webldouksprd001` |
+| VM OS type codes | `lnx`, `win`, `rh8`, `deb`, `ubu`, `sus` | `lnxldouksprd001` |
+| Environment stages | `poc`, `mvp`, `dev`, `tst`, `stg`, `uat`, `ppd`, `prd` | `prd` |
+| Management outfix | `mgt` - resource belongs to tenant or platform admins | `rg-crg-ukw-ppd-mgt` |
+
+---
+
+## Tagging
+
+A name identifies a resource; **tags** make the estate queryable for cost, ownership, security, and automation. CAF treats naming and tagging as one discipline - apply a consistent tag schema alongside this convention.
+
+### Minimum required tags
+
+Every resource group, and every resource that supports tags, carries at least:
+
+| Tag | Purpose | Example |
+|:--|:--|:--|
+| `environment` | Lifecycle stage (matches the name suffix) | `prd` |
+| `application` | Workload or product the resource serves | `hello-world` |
+| `owner` | Accountable team or distribution list | `platform@example.com` |
+| `costCentre` | Chargeback / showback code | `CC-1234` |
+| `managedBy` | How the resource is provisioned | `terraform` |
+| `criticality` | Drives DR and alerting priority | `tier-1` |
+
+### Rules
+
+- **Set tags once, in the module.** Construct the baseline tag map in a `local`, then merge per-resource extras, so every resource is tagged identically without copy-paste. Tag inheritance from the resource group is not automatic - configure it explicitly or set tags on each resource.
+- **Enforce with Azure Policy.** A *Require a tag* (deny) or *Inherit a tag from the resource group* (modify) policy catches anything created outside Terraform; pair it with the module-level construction above.
+- **Tags are not a security boundary and not secret.** Never put credentials, PII, or access decisions in a tag - they are readable by anyone with reader access.
+
+> **Rule:** A resource is not production-ready until it has both a convention-compliant **name** and the minimum tag set. Names help humans reading an incident; tags let machines filter cost, compliance, and impact at scale.
+
+---
+
+## Azure resource list
+
+The table below covers the resource types in Microsoft's [CAF abbreviations](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations) and [resource name rules](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules) guidance, extended with sub-resource types that follow the same pattern. The `${}` notation in constructs represents a dynamic value.
+
+---
+
+## Other resource list
+
+Naming for resources managed outside Azure Resource Manager - Entra ID objects and Azure DevOps items.
+
+### Entra ID resource list
+
+### Azure DevOps resource list

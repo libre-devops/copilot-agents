@@ -20,6 +20,7 @@ instructions:
   - terraform/standard.md
   - terraform/workflow.md
   - shared/grounding.md
+  - shared/knowledge-precedence.md
   - shared/output-contract.md
 
 capabilities:
@@ -30,6 +31,14 @@ capabilities:
       - url: https://developer.hashicorp.com/terraform/language
       - url: https://{{registry_url}}
       - url: https://learn.microsoft.com/en-us/azure
+
+# Uploaded into Agent Builder's Knowledge section, and copied into the rendered directory
+# ready to drag in. This is the grounding route that needs no connector and no admin: scoped
+# web search reads only what Bing indexes, so it cannot see private documentation.
+# Refresh the files with `just update-knowledge`. Max 20 files.
+knowledge_files:
+  - terraform-standards.txt
+  - azure-naming-convention.txt
 
 user_overrides:
   - path: "$.capabilities[?(@.name == 'WebSearch')]"

@@ -48,6 +48,56 @@ Limits, enforced by both the renderer and the linter:
   on that list, which is why `knowledge/workflowdefinition.schema.json` is emitted into the package
   as `workflowdefinition.schema.txt`.
 
+## Uploaded knowledge is the default, and it comes first
+
+Every agent ships a **knowledge pack**: the standards it is meant to enforce, converted to `.txt`
+and staged in `rendered/<agent>/knowledge/` ready to drag into Agent Builder's Knowledge section.
+The build guide lists them as step one, before any website.
+
+This is deliberate. Uploaded knowledge is the only grounding route that needs **no connector, no
+admin, and no public indexing**, so it works in a locked-down tenant where nothing else does.
+
+The agents are told to use it first. `shared/knowledge-precedence.md` sets the order:
+
+1. **Uploaded knowledge files.** The house standards. Authoritative: they beat web results and they
+   beat the model's own training wherever they disagree.
+2. **Web search**, only for what the files do not cover, such as provider or connector reference.
+3. **The model's own knowledge**, last, only to fill a remaining gap, and it must say when it does.
+
+If a knowledge file should have covered a question and returned nothing, the agent says so instead
+of moving on. That turns the silent failure described in the next section into a visible one.
+
+### What ships, and how to refresh it
+
+`knowledge/sources.yaml` declares each document and where it comes from. `just update-knowledge`
+fetches, converts and writes them; the result is committed so a render needs no network and the
+exact bytes an agent is grounded in show up in a diff.
+
+| Agent | Knowledge |
+|---|---|
+| `terraform-author` | the Terraform Standard, the Azure Naming Convention |
+| `logic-app-author` | the Azure Logic App Standard, the workflow definition schema |
+| `agent-author` | the declarative agent manifest schema |
+
+MDX is stripped to prose and code (fenced blocks are kept verbatim, since for a standards document
+they are the most valuable part) and JSON is pretty printed, because Agent Builder accepts
+`.doc .docx .ppt .pptx .xls .xlsx .txt .pdf` and not Markdown or JSON.
+
+### Using your own standards
+
+Either add your raw document URLs to `knowledge/sources.yaml` and run `just update-knowledge`, or
+drop `.txt`, `.pdf` or `.docx` files straight into `knowledge/`. Then point the agents at them from
+your profile, so upstream changes never collide with your content:
+
+```yaml
+agent_overrides:
+  terraform-author:
+    knowledge_files:
+      - our-terraform-standard.txt
+```
+
+Agent Builder allows **20 uploaded files** per agent, and the renderer refuses more.
+
 ## Scoped web search cannot see your private documentation
 
 This is the single most important thing to understand before pointing an agent at internal content.

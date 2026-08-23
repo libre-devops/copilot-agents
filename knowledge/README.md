@@ -1,17 +1,15 @@
 # Knowledge
 
-Vendored factual grounding material. **Facts only, never instructions**: see
-[docs/instruction-budget.md](../docs/instruction-budget.md) for why that line is enforced rather
-than merely encouraged.
+The documents agents upload into Agent Builder as knowledge. Facts only, never instructions: see
+[docs/instruction-budget.md](../docs/instruction-budget.md) for why that line is enforced.
 
-| File | What it is | Source |
-|---|---|---|
-| `workflowdefinition.schema.json` | the Azure Logic Apps workflow definition schema, 2016-06-01 | [schema.management.azure.com](https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json) |
+`sources.yaml` declares each document and where it comes from. `just update-knowledge` fetches,
+converts and writes the `.txt` files here, which are committed so a render needs no network and the
+exact bytes an agent is grounded in show up in a diff.
 
-## Getting this into a package
+Agent Builder accepts `.doc .docx .ppt .pptx .xls .xlsx .txt .pdf`, and 20 files per agent. Markdown
+and JSON are not accepted, which is why MDX is stripped to prose and code and JSON schemas are
+pretty printed into `.txt`.
 
-JSON is **not** an allowed embedded document type. The allowed set is `.doc`, `.docx`, `.ppt`,
-`.pptx`, `.xls`, `.xlsx`, `.txt` and `.pdf`, so the renderer emits this schema into the package as
-`workflowdefinition.schema.txt`, driven by the `as:` key in the agent's `embedded_knowledge` block.
-
-Embedded knowledge is off by default. See [docs/knowledge.md](../docs/knowledge.md).
+To ground agents in your own standards, add your URLs to `sources.yaml` or drop files in here, then
+point an agent at them from your profile. See [docs/knowledge.md](../docs/knowledge.md).

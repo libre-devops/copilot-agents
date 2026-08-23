@@ -43,7 +43,7 @@ PROFILES = ROOT / "profiles"
 DEFAULT_PROFILE = "default"
 
 MAX_INSTRUCTIONS = 8000
-WARN_INSTRUCTIONS = 7200  # 90 percent of the cap
+WARN_INSTRUCTIONS = 7600  # 95 percent of the cap, leaving 400 characters of buffer
 # Agent Builder's Name field allows 30 characters where the manifest allows 100. An over-long name
 # packages fine but cannot be typed into the builder, so this is a warning, not an error.
 MAX_BUILDER_NAME = 30
@@ -94,7 +94,7 @@ def lint_declarative_agent(path: Path, validator: Draft4Validator) -> None:
         if used > MAX_INSTRUCTIONS:
             error(where, f"instructions {used} characters, over the {MAX_INSTRUCTIONS} cap")
         elif used >= WARN_INSTRUCTIONS:
-            warn(where, f"instructions {used}/{MAX_INSTRUCTIONS}, under 10 percent headroom left")
+            warn(where, f"instructions {used}/{MAX_INSTRUCTIONS}, under 5 percent headroom left")
 
     for field in ("instructions", "description", "name"):
         value = manifest.get(field) or ""

@@ -21,7 +21,7 @@ LDO Logic App Author
 Writes, repairs and reviews Azure Logic App workflow definitions in Workflow Definition Language. Knows the three export wrappers, the declaration versus value parameter split, that action names are stored keys, and the failure modes that pass validation and break at run time: a catch that reports Succeeded, do-until semantics, unsafe variables under a parallel Foreach, and de-duping union.
 ```
 
-## 3. Instructions  (6968/8000 characters)
+## 3. Instructions  (7527/8000 characters)
 
 Paste the whole block. Do not summarise it: the character budget is already spent
 deliberately, and the grounding and output-contract sections are what stop the agent
@@ -138,6 +138,17 @@ cannot confirm `UNVERIFIED`.
 - If a request needs information you do not have, ask one focused question rather than assuming.
 - Never claim you have run, deployed, validated or tested anything. You emit code for a human to run.
 
+# KNOWLEDGE PRECEDENCE
+
+Answer from your sources in this order, and name the one you used.
+
+1. **Your uploaded knowledge files.** These are the house standards. They are authoritative: they
+   beat web results and they beat your own training wherever they disagree.
+2. **Web search**, only for what the files do not cover, such as provider or connector reference.
+3. **Your own knowledge**, last, only to fill a gap the first two left, and say when you do it.
+
+If a knowledge file should cover the question and returns nothing, say so rather than moving on.
+
 # OUTPUT CONTRACT
 
 - Emit code in a fenced block tagged with its language (`hcl`, `json`, `bash`, `powershell`).
@@ -152,6 +163,21 @@ Before answering, confirm: every cited fact has a source, every emitted argument
 ```
 
 ## 4. Knowledge
+
+### Upload these files first
+
+Drag them from the `knowledge/` directory beside this guide into the **Knowledge**
+section, or use the upload arrow. **These are the house standards and the agent is told
+to trust them over anything it finds on the web or already knows.**
+
+- `knowledge/azure-logic-app-standards.txt`
+- `knowledge/logic-app-workflow-definition-schema.txt`
+
+> Uploaded knowledge needs a Microsoft 365 Copilot licence or metered usage. It is the
+> only grounding route that needs no connector and no admin, and unlike web search it
+> works for content that is not publicly indexed.
+
+### Then add the web sources
 
 In the **Knowledge** section choose **Enter URL** and add each of these, pressing Enter
 after each one. Agent Builder allows four public website URLs, each at most two path

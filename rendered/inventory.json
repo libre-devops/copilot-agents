@@ -3,25 +3,30 @@
   "profile": "default",
   "agents": {
     "agent-author": {
-      "declarativeAgent.json": "10dec5c00de7e90f3b9e1ab9c11c541e4ff0c365d90b8287326f7361e43ca2d1",
+      "declarativeAgent.json": "e0201cb6e2937f1dd39bdadb4d899d167d9c239c96c56c370c13dcd0b9c9cc7d",
       "manifest.json": "517bbba841d7f015ebefab663f6215a4b33c2f4018afbd994c39627eed80c13d",
-      "BUILD-GUIDE.md": "0276450fd407faf380a766a050c441425bc5c2c62caa0a31c99544b7f2f6f6f7",
+      "BUILD-GUIDE.md": "b8171d48763d3e1bf335eb3f63dc83abb2550e46ee124b09942482586fb19dec",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
-      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672"
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/declarative-agent-schema.txt": "8c7dc8fcf91642f4c2fb7d75661cc569a34b33bdee2d03392ddfdbf917affda6"
     },
     "logic-app-author": {
-      "declarativeAgent.json": "96a1843d0958774d6e6c83c6161932a7539ecf93e84bc4ca0f2266d33d763440",
+      "declarativeAgent.json": "4163f3c7e87c72b8b7611c6bd8181c3388be4ab05311911bb0d2a90e6021ab31",
       "manifest.json": "b16f8eb2b49d85c67fa5419267837c90c93fac1caa3eff64de9e9fc470228e31",
-      "BUILD-GUIDE.md": "5983c9260c85f3b00af72e55f07c363acbe01ebad945216a59d474c250a2980f",
+      "BUILD-GUIDE.md": "c76853eb3ee7c52d12746ce1d85c5e4fe9396becf934296b9b684cbc8987f6f5",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
-      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672"
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/azure-logic-app-standards.txt": "e1ea8548572f09e46f7a2fb452d91ce767ed279b49ad382037682b915bf396d8",
+      "knowledge/logic-app-workflow-definition-schema.txt": "7b2d3f9a909066d6c0dfc224cb78cabc1b4e3686d4bc89ab29a5aea8633747ae"
     },
     "terraform-author": {
-      "declarativeAgent.json": "8b5aa209e95214a0b2997ce61f64a8108b53988bc2832d7be53cd9c28b1c2585",
+      "declarativeAgent.json": "714acf68506a1a4dbbe74a880f8de4b54a20977cf2ea44a4287d46e8654d6a2d",
       "manifest.json": "b1c50cd0f65a635b4a3545c8b63f14f8ea59126d203d2df1222f88d6b97efcfe",
-      "BUILD-GUIDE.md": "8e80577d261bcd8b379a9615ad4af8823b1c341c865008394300f42b4cddce2d",
+      "BUILD-GUIDE.md": "3338002199581777f78826ce2ee129794334a0f9ccc54ddd67d843c2fda89a18",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
-      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672"
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/terraform-standards.txt": "8ea70123d3c0e8d1a725a0a2853deb1fb3e4b09c3445b6af4ec41e5384cf2055",
+      "knowledge/azure-naming-convention.txt": "b352220b177d13962f660ba07f157e151f10a7e7d66be29a0672cfca32c9b503"
     }
   }
 }

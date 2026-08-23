@@ -24,6 +24,7 @@ instructions:
   - agent/instructions-craft.md
   - agent/workflow.md
   - shared/grounding.md
+  - shared/knowledge-precedence.md
   - shared/output-contract.md
 
 capabilities:
@@ -34,11 +35,13 @@ capabilities:
       - url: https://developer.microsoft.com/json-schemas
       - url: https://{{docs_url}}
 
-# Emitted only when rendering with --with-embedded-knowledge. See docs/knowledge.md.
-embedded_knowledge:
-  files:
-    - source: schema/declarative-agent-v1.8.schema.json
-      as: declarative-agent-v1.8.schema.txt
+
+# Uploaded into Agent Builder's Knowledge section, and copied into the rendered directory
+# ready to drag in. This is the grounding route that needs no connector and no admin: scoped
+# web search reads only what Bing indexes, so it cannot see private documentation.
+# Refresh the files with `just update-knowledge`. Max 20 files.
+knowledge_files:
+  - declarative-agent-schema.txt
 
 user_overrides:
   - path: "$.capabilities[?(@.name == 'WebSearch')]"
