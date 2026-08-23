@@ -169,6 +169,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Create a branding profile interactively.")
     parser.add_argument("name", help="profile name, used as the file name and the id")
     parser.add_argument("--defaults", action="store_true", help="accept every default without asking")
+    parser.add_argument(
+        "--brief",
+        action="store_true",
+        help="suppress the closing next-steps block, for a caller that prints its own",
+    )
     args = parser.parse_args()
 
     name = slug(args.name)
@@ -310,8 +315,9 @@ app_ids: {{}}
     if "example.invalid" in target.read_text(encoding="utf-8"):
         print("  note: some URLs are placeholders on example.invalid, fine for Agent Builder,")
         print("        replace them before publishing an app package")
-    print(f"\nNext:  just package {name}")
-    print(f"       then open build/{name}/terraform-author/BUILD-GUIDE.md\n")
+    if not args.brief:
+        print(f"\nNext:  just package {name}")
+        print(f"       then open build/{name}/terraform-author/BUILD-GUIDE.md\n")
     return 0
 
 

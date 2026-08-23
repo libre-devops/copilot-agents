@@ -17,6 +17,14 @@
 default:
     just --list
 
+# Everything from a fresh clone to a build guide you can paste from: knowledge packs, a profile if
+# you name one, render, lint, then the exact paths and the URL to open.
+#
+#   just quickstart          # the Libre DevOps agents
+#   just quickstart cdsr     # your own branding, asking for your standards on the way through
+quickstart profile="default":
+    uv run tools/quickstart.py {{profile}}
+
 # Compose agents into rendered/ (default profile) or build/<profile>/. Extra args pass through,
 # for example: just render default terraform-author --with-embedded-knowledge
 render profile="default" *args:

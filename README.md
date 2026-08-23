@@ -38,38 +38,45 @@ winget install --id=astral-sh.uv                    # Windows
 
 ## Quick start
 
-Get one agent into Copilot and shared with your team, in about ten minutes.
-
 ```bash
 git clone https://github.com/libre-devops/copilot-agents.git
 cd copilot-agents
-
-uv sync                     # .venv with just, pyyaml, jsonschema and ruff
-uv run just validate        # proves it builds. Offline, no tenant, no cost, nothing to log in to
+uv run just quickstart
 ```
 
-Now open **[`rendered/terraform-author/BUILD-GUIDE.md`](./rendered/terraform-author/BUILD-GUIDE.md)**
-beside <https://m365.cloud.microsoft/agents/new> and work down it. The guide is generated for exactly
-this: it gives you the text to paste into every field, the files to upload, what to leave switched
-off, how to test it, and how to share it.
+That is the whole thing. It checks the knowledge packs, renders, lints, and then prints the exact
+file to open and the URL to open it beside:
 
-That is the whole flow. No admin, no upload, no tenant configuration.
+```
+[1/4] Knowledge packs................... 5 present
+[2/4] Profile........................... using profiles/default.yaml
+[3/4] Rendering......................... 3 agents
+[4/4] Linting........................... clean
+
+Done. Build your first agent:
+
+  1. Open   https://m365.cloud.microsoft/agents/new
+  2. Choose "Skip to configure", not the Describe tab
+  3. Follow rendered/terraform-author/BUILD-GUIDE.md
+```
+
+Offline, no tenant, nothing to log in to. The build guide then tells you what to paste into every
+field, which files to upload, how to test it and how to share it.
 
 ### Under your own branding
 
 ```bash
-uv run just new-profile acme     # asks for each value, Enter accepts the default
-uv run just check acme           # renders and lints into build/acme/
+uv run just quickstart cdsr
 ```
 
-Then open `build/acme/terraform-author/BUILD-GUIDE.md` instead. You can hold Enter through every
-question and still get something that builds; the placeholders sit on `example.invalid` so an
-unedited value is obvious rather than silently wrong.
+Name a profile that does not exist yet and the wizard runs on the way through. It asks for your
+organisation name, URLs and colour, each with a default, and then **asks for your own standards**,
+importing a file or a whole folder and converting Markdown, YAML or JSON into the `.txt` Agent
+Builder requires. Imported documents land in `knowledge/local/`, which is gitignored, so an internal
+standard cannot become committable by being put in the obvious place.
 
-The wizard also **asks for your own standards** and imports them, converting Markdown, YAML or JSON
-into the `.txt` Agent Builder requires. They land in `knowledge/local/`, which is gitignored, so an
-internal document cannot become committable by being put in the obvious place. Skip the question and
-the agents keep the Libre DevOps standards. See [docs/knowledge.md](./docs/knowledge.md).
+Hold Enter through every question and you still get something that builds, on the Libre DevOps
+standards. See [docs/knowledge.md](./docs/knowledge.md) to reground it later.
 
 ### Where things end up
 
