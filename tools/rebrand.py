@@ -19,24 +19,29 @@ would otherwise turn it into "Wacm Corp".
 Usage:
     uv run tools/rebrand.py                 # ask, preview, confirm
     uv run tools/rebrand.py --dry-run       # show what would change and stop
-    uv run tools/rebrand.py --force         # allow a dirty working tree
+    uv run tools/rebrand.py --force         # skip the confirmations
 
-Exit codes: 0 done or declined, 1 refused, 2 usage.
+A copy of every file it changes is written to .rebrand-backup/ first, unless the tree is a clean
+git checkout where `git checkout .` already does the job.
+
+Exit codes: 0 done or declined, 1 a step failed, 2 usage.
 """
 from __future__ import annotations
 
 import argparse
 import re
+import shutil
 import subprocess
 import sys
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
 # Generated or fetched content. rendered/ is rebuilt at the end; knowledge/*.txt are other people's
 # documents and rewriting their text would falsify them.
-SKIP_DIRS = {".git", ".venv", "build", "dist", "node_modules", "__pycache__", "rendered"}
+SKIP_DIRS = {".git", ".venv", "build", "dist", "node_modules", "__pycache__", "rendered", ".rebrand-backup"}
 # This file must exclude itself: its mapping keys are the literal strings it searches for, so
 # rewriting them would destroy the tool on first use.
 SKIP_FILES = {"uv.lock", "rebrand.py"}
@@ -59,6 +64,42 @@ def tracked_files(include_sources: bool) -> list[Path]:
             continue
         files.append(path)
     return sorted(files)
+
+
+def repo_state() -> tuple[str, str]:
+    """How recoverable is this checkout? Not everyone arrives here by cloning.
+
+    Copying an unpacked zip into an existing repository is a perfectly normal way to adopt this,
+    and it leaves a dirty tree that has nothing to do with the rebrand. Refusing to run in that
+    case was wrong: what actually matters is that the rewrite can be undone, and a backup provides
+    that whether or not git does.
+    """
+    try:
+        inside = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            cwd=ROOT, capture_output=True, text=True,
+        )
+        if inside.returncode != 0 or inside.stdout.strip() != "true":
+            return "none", "not a git repository"
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True
+        ).stdout.strip()
+        if dirty:
+            return "dirty", f"{len(dirty.splitlines())} uncommitted change(s)"
+        return "clean", "clean working tree"
+    except (OSError, subprocess.SubprocessError):
+        return "none", "git unavailable"
+
+
+def back_up(paths: list[Path]) -> Path:
+    """Copy every file about to change, so undo never depends on git."""
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    root = ROOT / ".rebrand-backup" / stamp
+    for path in paths:
+        target = root / path.relative_to(ROOT)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+    return root
 
 
 def ask(prompt: str, default: str) -> str:
@@ -115,7 +156,7 @@ def rewrite(text: str, mapping: dict[str, str]) -> tuple[str, int]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Rebrand this repository for a fork.")
     parser.add_argument("--dry-run", action="store_true", help="show what would change and stop")
-    parser.add_argument("--force", action="store_true", help="proceed even with a dirty working tree")
+    parser.add_argument("--force", action="store_true", help="skip the confirmations")
     args = parser.parse_args()
 
     print("\nRebrand this repository")
@@ -129,16 +170,15 @@ def main() -> int:
     print("  Installed agents do not follow: they would need rebuilding and resharing.")
     print()
 
-    dirty = subprocess.run(
-        ["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True
-    ).stdout.strip()
-    if dirty and not args.force:
-        print("  Refusing: the working tree has uncommitted changes.")
-        print("  Commit or stash first, so this rewrite is reviewable and `git checkout .` undoes it.")
-        print("  Override with --force if you know what you are doing.")
-        return 1
+    state, detail = repo_state()
+    if state == "clean":
+        print(f"  Undo: {detail}, so `git checkout .` reverts everything.")
+    else:
+        print(f"  Undo: {detail}, so a copy of every file this changes is written to")
+        print("  .rebrand-backup/<timestamp>/ before anything is touched.")
+    print()
 
-    if not args.dry_run and not confirm("Understood, continue?"):
+    if not args.dry_run and not args.force and not confirm("Understood, continue?"):
         print("\n  Nothing changed.\n")
         return 0
 
@@ -194,9 +234,14 @@ def main() -> int:
         print("\n  Dry run, nothing written.\n")
         return 0
 
-    if not confirm("\n  Write these changes?"):
+    if not args.force and not confirm("\n  Write these changes?"):
         print("\n  Nothing changed.\n")
         return 0
+
+    backup = None
+    if state != "clean":
+        backup = back_up([p for p, _, _ in changes])
+        print(f"\n  Backed up {len(changes)} file(s) to {backup.relative_to(ROOT)}")
 
     for path, _, updated in changes:
         path.write_text(updated, encoding="utf-8")
@@ -226,7 +271,12 @@ def main() -> int:
     else:
         print("    - knowledge/sources.yaml now points at your domain. Fix the URLs before running")
         print("      `just update-knowledge`, or it will fail.")
-    print("\n  Then: git diff, uv run just validate, and commit.\n")
+    if backup is not None:
+        print(f"\n  To undo:  cp -r {backup.relative_to(ROOT)}/. .")
+        print("  Delete .rebrand-backup once you are happy.")
+        print("\n  Then: uv run just validate.\n")
+    else:
+        print("\n  Then: git diff, uv run just validate, and commit.\n")
     return 0
 
 

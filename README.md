@@ -299,8 +299,12 @@ same agent identities as upstream.
 
 > **Run it just after forking, not later.** Changing the namespace changes every agent id, and the
 > agent names change too. Agents already installed from this checkout do not follow: they would have
-> to be rebuilt and reshared. The tool refuses to run on a dirty working tree so the rewrite stays
-> reviewable and `git checkout .` undoes it.
+> to be rebuilt and reshared.
+
+You do not need to have cloned it. Downloading the zip and copying it into an existing repository is
+a normal way to adopt this, and the tool handles it: unless it finds a clean git checkout, where
+`git checkout .` already does the job, it copies every file it is about to change into
+`.rebrand-backup/<timestamp>/` and prints the one command that restores them.
 
 Two things it deliberately does not touch: `knowledge/*.txt`, because those are other people's
 published documents and rewriting their text would falsify them, and its own source, because its
