@@ -452,7 +452,8 @@ def build_guide(
             "to trust them over anything it finds on the web or already knows.**",
             "",
         ]
-        lines += [f"- `knowledge/{f}`" for f in knowledge]
+        # Files are staged flat, so strip any "local/" prefix the profile used to locate them.
+        lines += [f"- `knowledge/{Path(f).name}`" for f in knowledge]
         lines += [
             "",
             "> Uploaded knowledge needs a Microsoft 365 Copilot licence or metered usage. It is the",
@@ -652,18 +653,22 @@ def render_one(agent_id: str, profile: dict, embedded: bool, dest_root: Path) ->
         pack = out / "knowledge"
         pack.mkdir(parents=True, exist_ok=True)
         for name in wanted:
+            # A bare name resolves in knowledge/, and "local/x.txt" in the gitignored knowledge
+            # directory where your own documents live.
             source = KNOWLEDGE / name
             if not source.is_file():
                 fail(
                     agent_id,
-                    f"knowledge file not found: knowledge/{name}. Run `just update-knowledge`, or "
-                    "drop the file in knowledge/ and list it in the agent definition.",
+                    f"knowledge file not found: knowledge/{name}. Run `just update-knowledge` for "
+                    "an upstream pack, or put your own document in knowledge/local/ and reference "
+                    'it as "local/<name>".',
                 )
             if Path(name).suffix.lower() not in EMBEDDED_SUFFIXES:
                 fail(agent_id, f"knowledge file type not supported by Agent Builder: {name}")
             data = source.read_bytes()
-            (pack / name).write_bytes(data)
-            files[f"knowledge/{name}"] = hashlib.sha256(data).hexdigest()
+            flat = Path(name).name
+            (pack / flat).write_bytes(data)
+            files[f"knowledge/{flat}"] = hashlib.sha256(data).hexdigest()
 
     if embedded:
         for item in (spec.get("embedded_knowledge") or {}).get("files", []):

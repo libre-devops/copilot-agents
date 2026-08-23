@@ -26,6 +26,19 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PROFILES = ROOT / "profiles"
+KNOWLEDGE_LOCAL = ROOT / "knowledge" / "local"
+
+# Agent Builder accepts these directly. Anything else text-like is converted to .txt, because
+# Markdown, YAML and JSON are not accepted however sensible that would be.
+UPLOADABLE = {".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt", ".pdf"}
+CONVERTIBLE = {".md", ".mdx", ".yaml", ".yml", ".json", ".hcl", ".tf", ".rst", ".adoc", ""}
+
+# Which agents it is worth offering to reground. agent-author is grounded in the declarative agent
+# schema, which is Microsoft's and not yours, so it is not offered.
+REGROUNDABLE = {
+    "terraform-author": "Terraform standards",
+    "logic-app-author": "Logic App standards",
+}
 
 BRAND_ACCENT = "#15803D"
 
@@ -106,6 +119,48 @@ def ask(prompt: str, default: str, interactive: bool) -> str:
     return answer or default
 
 
+def import_knowledge(raw: str, profile: str, label: str) -> tuple[list[str], list[str]]:
+    """Copy the user's documents into knowledge/local/, converting where Agent Builder needs it.
+
+    Accepts a single file or a directory. Names are prefixed with the profile so an imported
+    document can never collide with an upstream pack, and everything lands in knowledge/local/,
+    which is gitignored: internal standards must not become committable by being put in the
+    obvious place.
+    """
+    notes: list[str] = []
+    source = Path(raw.strip()).expanduser()
+    if not source.exists():
+        return [], [f"{source} does not exist, keeping the default {label}"]
+
+    candidates = sorted(p for p in source.iterdir() if p.is_file()) if source.is_dir() else [source]
+    imported: list[str] = []
+    KNOWLEDGE_LOCAL.mkdir(parents=True, exist_ok=True)
+
+    for item in candidates:
+        suffix = item.suffix.lower()
+        target_name = f"{profile}-{slug(item.stem)}"
+        if suffix in UPLOADABLE:
+            target = KNOWLEDGE_LOCAL / f"{target_name}{suffix}"
+            target.write_bytes(item.read_bytes())
+        elif suffix in CONVERTIBLE:
+            try:
+                text = item.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
+                notes.append(f"skipped {item.name}: not readable as text")
+                continue
+            target = KNOWLEDGE_LOCAL / f"{target_name}.txt"
+            target.write_text(f"# {item.name}\n\n{text}", encoding="utf-8")
+            notes.append(f"converted {item.name} to {target.name}, Agent Builder does not accept {suffix}")
+        else:
+            notes.append(f"skipped {item.name}: Agent Builder does not accept {suffix}")
+            continue
+        imported.append(f"local/{target.name}")
+
+    if not imported:
+        notes.append(f"nothing usable found, keeping the default {label}")
+    return imported, notes
+
+
 def slug(name: str) -> str:
     return re.sub(r"[^a-z0-9-]", "-", name.lower()).strip("-") or "profile"
 
@@ -156,7 +211,53 @@ def main() -> int:
     accent = ask("Accent colour for the icons, as #RRGGBB", BRAND_ACCENT, interactive)
     version = ask("App package version, must not start with 0", "1.0.0", interactive)
 
+    # Knowledge. The agents ship the Libre DevOps standards; this is where you swap in your own.
+    overrides: dict[str, list[str]] = {}
+    if interactive:
+        print("\n  Knowledge. The agents ship the Libre DevOps standards as uploaded files.")
+        print("  Give a path to a file or a folder to use your own, or press Enter to keep them.")
+        print("  Anything you import goes in knowledge/local/, which is gitignored.\n")
+    for agent_id, label in REGROUNDABLE.items():
+        answer = ask(f"Your {label} (file or folder, Enter to keep the default)", "", interactive)
+        if not answer.strip():
+            continue
+        imported, notes = import_knowledge(answer, name, label)
+        for note in notes:
+            print(f"    note: {note}")
+        if imported:
+            overrides[agent_id] = imported
+            print(f"    imported {len(imported)} file(s) for {agent_id}")
+
     namespace = uuid.uuid5(uuid.NAMESPACE_DNS, f"{name}.copilot-agents")
+
+    if overrides:
+        block = (
+            "\n# Your own knowledge, imported into knowledge/local/ which is gitignored.\n"
+            "agent_overrides:\n"
+        )
+        for agent_id, files_ in overrides.items():
+            block += f"  {agent_id}:\n    knowledge_files:\n"
+            block += "".join(f"      - {f}\n" for f in files_)
+    else:
+        block = """
+# Ground the agents in your own documents instead of the Libre DevOps ones:
+#
+#   1. Put your standards in knowledge/local/ (gitignored) as .txt, .pdf or .docx
+#   2. Point the agents at them here, prefixing the name with local/
+#
+# agent_overrides:
+#   terraform-author:
+#     knowledge_files:
+#       - local/our-terraform-standard.txt
+#
+# To ground in SharePoint instead of uploaded files, override capabilities as well:
+#
+#   terraform-author:
+#     capabilities:
+#       - name: OneDriveAndSharePoint
+#         items_by_url:
+#           - url: https://contoso.sharepoint.com/sites/PlatformEngineering
+"""
 
     target.write_text(
         f"""# {org} branding profile, created by `just new-profile {name}`.
@@ -189,37 +290,22 @@ package:
 
 app_id_namespace: {namespace}
 app_ids: {{}}
-
-# Ground the agents in your own documents instead of the Libre DevOps ones:
-#
-#   1. Put your standards in knowledge/ as .txt, .pdf or .docx, or add their raw URLs to
-#      knowledge/sources.yaml and run `just update-knowledge`.
-#   2. Point the agents at them here.
-#
-# agent_overrides:
-#   terraform-author:
-#     knowledge_files:
-#       - our-terraform-standard.txt
-#
-# To ground in SharePoint instead of uploaded files, override capabilities as well:
-#
-#   terraform-author:
-#     capabilities:
-#       - name: OneDriveAndSharePoint
-#         items_by_url:
-#           - url: https://contoso.sharepoint.com/sites/PlatformEngineering
-""",
+{block}""",
         encoding="utf-8",
     )
 
     print(f"\nCreated profiles/{name}.yaml")
     print(f"  app id namespace {namespace}")
-    if any("needs a login" in n for n in docs_notes):
-        print("\n  Your standards are not reachable by web search. The agents already ship the")
-        print("  Libre DevOps standards as uploaded knowledge; replace them with your own:")
-        print("    1. put your documents in knowledge/ as .txt, .pdf or .docx")
-        print(f"    2. list them under agent_overrides in profiles/{name}.yaml")
+    if any("needs a login" in n for n in docs_notes) and not overrides:
+        print("\n  Your standards are not reachable by web search, and you kept the Libre DevOps")
+        print("  knowledge packs, so these agents will enforce those rather than yours. To fix it:")
+        print("    1. put your documents in knowledge/local/ (gitignored) as .txt, .pdf or .docx")
+        print(f"    2. list them under agent_overrides in profiles/{name}.yaml, prefixed local/")
         print("  See docs/knowledge.md. The commented block at the bottom of the profile shows how.")
+    elif overrides:
+        grounded = ", ".join(sorted(overrides))
+        print(f"\n  Grounded in your own documents: {grounded}.")
+        print("  Anything not listed there keeps the Libre DevOps standards.")
 
     if "example.invalid" in target.read_text(encoding="utf-8"):
         print("  note: some URLs are placeholders on example.invalid, fine for Agent Builder,")

@@ -64,8 +64,12 @@ uv run just check acme           # renders and lints into build/acme/
 
 Then open `build/acme/terraform-author/BUILD-GUIDE.md` instead. You can hold Enter through every
 question and still get something that builds; the placeholders sit on `example.invalid` so an
-unedited value is obvious rather than silently wrong. Grounding it in your own standards rather than
-the Libre DevOps ones is [one block in the profile](./docs/knowledge.md#using-your-own-standards).
+unedited value is obvious rather than silently wrong.
+
+The wizard also **asks for your own standards** and imports them, converting Markdown, YAML or JSON
+into the `.txt` Agent Builder requires. They land in `knowledge/local/`, which is gitignored, so an
+internal document cannot become committable by being put in the obvious place. Skip the question and
+the agents keep the Libre DevOps standards. See [docs/knowledge.md](./docs/knowledge.md).
 
 ### Where things end up
 

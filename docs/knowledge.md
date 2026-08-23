@@ -85,16 +85,37 @@ they are the most valuable part) and JSON is pretty printed, because Agent Build
 
 ### Using your own standards
 
-Either add your raw document URLs to `knowledge/sources.yaml` and run `just update-knowledge`, or
-drop `.txt`, `.pdf` or `.docx` files straight into `knowledge/`. Then point the agents at them from
-your profile, so upstream changes never collide with your content:
+The quickest route is to let the wizard import them:
+
+```bash
+uv run just new-profile acme
+```
+
+It asks for a path to your Terraform and Logic App standards, accepts a single file or a whole
+folder, converts anything Agent Builder will not take (Markdown, YAML, JSON) into `.txt`, skips what
+it cannot use, and writes the `agent_overrides` block for you.
+
+**Imported documents land in `knowledge/local/`, which is gitignored.** That is deliberate:
+`knowledge/` itself is tracked because the upstream packs are committed there, so an internal
+standard dropped in the obvious place would otherwise be committable. Anything under `local/` cannot
+be.
+
+By hand, the same thing:
 
 ```yaml
 agent_overrides:
   terraform-author:
     knowledge_files:
-      - our-terraform-standard.txt
+      - local/our-terraform-standard.txt    # from knowledge/local/, gitignored
+      - azure-naming-convention.txt         # an upstream pack, from knowledge/
 ```
+
+A bare name resolves in `knowledge/`, and a `local/` prefix in `knowledge/local/`. You can mix them,
+and an agent you do not override keeps its defaults. Files are staged flat into the rendered output,
+so the build guide lists them by name.
+
+For a source that is published and Bing-indexable, add its raw URL to `knowledge/sources.yaml` and
+run `just update-knowledge` instead, which keeps it refreshable.
 
 Agent Builder allows **20 uploaded files** per agent, and the renderer refuses more.
 

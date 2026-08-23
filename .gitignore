@@ -3,6 +3,11 @@
 dist/
 build/
 
+# Your own knowledge documents. knowledge/ itself is tracked, because the upstream standards are
+# committed there, so anything internal goes in knowledge/local/ which is ignored wholesale. An
+# internal document cannot then reach a public repository by being dropped in the wrong folder.
+knowledge/local/
+
 # Branding profiles are allowlisted, not denylisted. A profile you add is ignored unless it is
 # named below, so an internal or customer profile cannot reach a public repository by accident.
 profiles/*
