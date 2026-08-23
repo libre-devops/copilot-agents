@@ -1,8 +1,8 @@
-# LDO Logic App Author. Source of truth for the rendered declarative agent manifest.
+# {{brand_short}} Logic App Author. Source of truth for the rendered declarative agent manifest.
 # Render with: just render logic-app-author
 ---
 id: logic-app-author
-name: LDO Logic App Author
+name: "{{brand_short}} Logic App Author"
 description: >-
   Writes, repairs and reviews Azure Logic App workflow definitions in Workflow Definition Language.
   Knows the three export wrappers, the declaration versus value parameter split, that action names
@@ -24,7 +24,7 @@ instructions:
 capabilities:
   - name: WebSearch
     sites:
-      - url: https://libredevops.org/docs/documents
+      - url: https://{{docs_url}}
       - url: https://learn.microsoft.com/en-us/azure
       - url: https://learn.microsoft.com/en-us/connectors
 
@@ -62,12 +62,10 @@ conversation_starters:
   - title: Sentinel playbook
     text: Draft a Consumption workflow triggered by a Sentinel incident that posts an enrichment comment.
   - title: Review a definition
-    text: Review this definition against the Libre DevOps Logic App standard and list only the violations.
+    text: Review this definition against the {{brand_name}} Logic App standard and list only the violations.
 
+# Branding comes from the active profile: app_id, version and accent_color live there.
 package:
-  app_id: 9707f0fe-14fe-454e-afb0-22e3f0116882
-  version: 0.0.1
-  accent_color: "#15803D"
-  short_name: LDO Logic App
-  full_name: Libre DevOps Logic App Author
+  short_name: "{{brand_short}} Logic App"
+  full_name: "{{brand_name}} Logic App Author"
   short_description: Writes Azure Logic App workflow definitions.

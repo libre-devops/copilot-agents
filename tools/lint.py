@@ -16,8 +16,13 @@ Three layers, because no single one is sufficient:
 3. House rules: no em dashes or en dashes, and instruction headroom reported so a change that
    quietly eats the remaining budget is visible in review.
 
+4. Brand leakage: when linting a profile other than the default, any value from the default
+   profile's tokens that survives into the output is reported. That is how a rebrand silently ships
+   someone else's branding, for example the `ldo` product infix inside a storage account name.
+
 Usage:
     uv run tools/lint.py                     # lint everything under rendered/
+    uv run tools/lint.py --profile acme      # lint build/acme/
     uv run tools/lint.py rendered/terraform-author
 
 Exit codes: 0 clean (warnings allowed), 1 errors, 2 usage.
@@ -33,6 +38,9 @@ from jsonschema import Draft4Validator
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = ROOT / "schema" / "declarative-agent-v1.8.schema.json"
 RENDERED = ROOT / "rendered"
+BUILD = ROOT / "build"
+PROFILES = ROOT / "profiles"
+DEFAULT_PROFILE = "default"
 
 MAX_INSTRUCTIONS = 8000
 WARN_INSTRUCTIONS = 7200  # 90 percent of the cap
@@ -153,14 +161,64 @@ def lint_app_manifest(path: Path) -> None:
             error(where, f"description.{field} is {len(value)} characters, the limit is {limit}")
 
 
+def default_tokens() -> dict:
+    """The default profile's token values, read without a YAML dependency."""
+    path = PROFILES / f"{DEFAULT_PROFILE}.yaml"
+    if not path.is_file():
+        return {}
+    tokens, in_tokens = {}, False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("tokens:"):
+            in_tokens = True
+            continue
+        if in_tokens:
+            if line[:1] not in (" ", "\t") and line.strip():
+                break
+            if ":" in line and line.strip() and not line.strip().startswith("#"):
+                key, _, value = line.strip().partition(":")
+                cleaned = value.strip().strip("\"'")
+                if cleaned:
+                    tokens[key.strip()] = cleaned
+    return tokens
+
+
+def lint_brand_leakage(path: Path, profile: str) -> None:
+    """Report default-profile branding that survived into a rebranded package."""
+    where = str(path.relative_to(ROOT))
+    text = path.read_text(encoding="utf-8")
+    for key, value in default_tokens().items():
+        # Match case-insensitively: the infix appears lower case inside generated resource names.
+        if value.lower() in text.lower():
+            warn(
+                where,
+                f"profile {profile!r} still contains the default profile's {key} value {value!r}. "
+                "If that is not deliberate, add the token to your profile.",
+            )
+
+
 def main() -> int:
     if not SCHEMA.is_file():
         print(f"schema not found: {SCHEMA}", file=sys.stderr)
         return 2
     validator = Draft4Validator(json.loads(SCHEMA.read_text(encoding="utf-8")))
 
-    targets = [Path(a).resolve() for a in sys.argv[1:]] or sorted(
-        p for p in RENDERED.iterdir() if p.is_dir()
+    argv = sys.argv[1:]
+    profile = DEFAULT_PROFILE
+    if "--profile" in argv:
+        index = argv.index("--profile")
+        if index + 1 >= len(argv):
+            print("--profile needs a name", file=sys.stderr)
+            return 2
+        profile = argv[index + 1]
+        del argv[index : index + 2]
+
+    root = RENDERED if profile == DEFAULT_PROFILE else BUILD / profile
+    if not root.is_dir():
+        print(f"nothing to lint at {root}, run `just render {profile}` first", file=sys.stderr)
+        return 2
+
+    targets = [Path(a).resolve() for a in argv] or sorted(
+        p for p in root.iterdir() if p.is_dir() and (p / "declarativeAgent.json").is_file()
     )
     if not targets:
         print("nothing to lint, run `just render` first", file=sys.stderr)
@@ -180,6 +238,8 @@ def main() -> int:
             lint_app_manifest(app)
         else:
             error(str(target), "manifest.json is missing")
+        if profile != DEFAULT_PROFILE:
+            lint_brand_leakage(da, profile)
 
     for message in warnings:
         print(f"WARN  {message}")

@@ -9,10 +9,13 @@
 
 # Copilot Agents
 
-Microsoft 365 Copilot declarative agents as code: agent definitions that teach Copilot to write
-Terraform and Azure Logic App workflows to the Libre DevOps standards, composed from reusable
-instruction fragments, validated against the published schema, and rendered into uploadable app
-packages.
+Microsoft 365 Copilot declarative agents as code: a growing collection of custom agents, composed
+from reusable instruction fragments, validated against the published schema, and rendered into
+uploadable app packages. Terraform and Azure Logic Apps are where the collection starts, not where
+it stops.
+
+Branding is a swappable profile, so you can publish the same agents under your own organisation
+with two commands and without editing a fragment.
 
 [![CI](https://github.com/libre-devops/copilot-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/libre-devops/copilot-agents/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/libre-devops/copilot-agents)](./LICENSE)
@@ -29,9 +32,20 @@ packages.
 git clone https://github.com/libre-devops/copilot-agents.git
 cd copilot-agents
 
-just validate    # render, drift gate, and lint. Offline, no tenant, no cost.
-just package     # build dist/<agent>-<version>.zip, ready to upload
+just validate            # render, drift gate, and lint. Offline, no tenant, no cost.
+just package             # build dist/<agent>-<version>.zip, ready to upload
 ```
+
+Publishing under your own brand instead:
+
+```bash
+just new-profile acme    # scaffolds profiles/acme.yaml with its own app id namespace
+$EDITOR profiles/acme.yaml
+just package acme        # writes dist/acme/<agent>-<version>.zip
+```
+
+Profiles you add are gitignored by default, so your organisation's details cannot reach a public
+repository by accident. See [docs/profiles.md](./docs/profiles.md).
 
 Everything above runs offline and needs no Microsoft 365 tenant. Only installing an agent does.
 
@@ -50,7 +64,7 @@ agent never claims to have run, deployed or validated anything.
 ## How it fits together
 
 ```
-fragments/          instruction fragments, composed in order
+fragments/          instruction fragments, composed in order   what the agent DOES
   shared/           house rules every agent inherits
   terraform/        the Terraform standard, distilled to rules
   logic-app/        Workflow Definition Language, distilled to rules
@@ -58,13 +72,16 @@ fragments/          instruction fragments, composed in order
         |
 agents/<id>/agent.yaml    the definition: metadata, fragment list, capabilities, starters
         |
-   tools/render.py        compose, enforce every platform limit, fail loudly
+profiles/<name>.yaml      publisher, tokens, colour, app ids        who PUBLISHES it
         |
-rendered/<id>/      committed output: declarativeAgent.json, manifest.json, icons
+   tools/render.py        substitute, compose, enforce every limit, fail loudly
         |
-   tools/lint.py          schema validation plus the semantics the schema cannot express
+rendered/<id>/            committed output for the default profile
+build/<profile>/<id>/     everything else, gitignored
         |
-dist/<id>-<ver>.zip       the uploadable Microsoft 365 app package
+   tools/lint.py          schema validation, semantics, and brand leakage
+        |
+dist/[<profile>/]<id>-<ver>.zip    the uploadable Microsoft 365 app package
 ```
 
 `rendered/` is committed on purpose. It is the drop-in path for anyone who wants the manifests
@@ -113,6 +130,7 @@ needs a licence or metered usage enabled in the tenant.
 | Path | What it holds |
 |---|---|
 | [`agents/`](./agents) | one directory per agent: `agent.yaml` and a README |
+| [`profiles/`](./profiles) | branding profiles: publisher, tokens, colour, app ids. Yours is gitignored |
 | [`fragments/`](./fragments) | instruction fragments, the single source for shared house rules |
 | [`rendered/`](./rendered) | generated manifests and icons, committed and drift gated, never hand edited |
 | [`knowledge/`](./knowledge) | factual grounding material, vendored |
@@ -127,6 +145,7 @@ needs a licence or metered usage enabled in the tenant.
 |---|---|
 | [instruction-budget.md](./docs/instruction-budget.md) | the 8,000 character cap, why you cannot route around it, and how to spend it |
 | [authoring.md](./docs/authoring.md) | adding an agent, the fragment convention, choosing capabilities, testing |
+| [profiles.md](./docs/profiles.md) | publishing under your own brand, tokens, app id derivation, output routing |
 | [knowledge.md](./docs/knowledge.md) | what grounds each agent, WebSearch and embedded file limits, tenant sources |
 | [platform-notes.md](./docs/platform-notes.md) | where the docs, the schema and reality disagree, with dates |
 

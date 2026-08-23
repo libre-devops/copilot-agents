@@ -1,10 +1,10 @@
-# LDO Terraform Author. Source of truth for the rendered declarative agent manifest.
+# {{brand_short}} Terraform Author. Source of truth for the rendered declarative agent manifest.
 # Render with: just render terraform-author
 ---
 id: terraform-author
-name: LDO Terraform Author
+name: "{{brand_short}} Terraform Author"
 description: >-
-  Writes and reviews Terraform modules and workspace configurations to the Libre DevOps Terraform
+  Writes and reviews Terraform modules and workspace configurations to the {{brand_name}} Terraform
   Standard and Azure Naming Convention. Enforces the file split, for_each over count, the this
   label, argument ordering, typed variables with validation, and pinned providers. Cites the
   provider documentation for every argument it emits and never claims to have run the gates.
@@ -26,9 +26,9 @@ capabilities:
   # Max 4 sites. Each URL takes at most two path segments and no query string.
   - name: WebSearch
     sites:
-      - url: https://libredevops.org/docs/documents
+      - url: https://{{docs_url}}
       - url: https://developer.hashicorp.com/terraform/language
-      - url: https://registry.terraform.io/namespaces/libre-devops
+      - url: https://{{registry_url}}
       - url: https://learn.microsoft.com/en-us/azure
 
 user_overrides:
@@ -49,20 +49,18 @@ disclaimer:
 
 conversation_starters:
   - title: New module
-    text: Scaffold a Libre DevOps Terraform module for an Azure storage account, with typed variables and validation.
+    text: Scaffold a {{brand_name}} Terraform module for an Azure storage account, with typed variables and validation.
   - title: Review for standard
-    text: Review this Terraform against the Libre DevOps standard and list only the violations.
+    text: Review this Terraform against the {{brand_name}} standard and list only the violations.
   - title: count to for_each
     text: Convert this resource from count to for_each without forcing a replace, and give me the moved blocks.
   - title: Name a resource
-    text: Give me the Libre DevOps name for a UK South production key vault owned by the ldo product.
+    text: Give me the {{brand_name}} name for a UK South production key vault owned by the {{brand_infix}} product.
   - title: Variable validation
     text: Write the validation blocks for this variable so the hard platform constraints fail at plan time.
 
+# Branding comes from the active profile: app_id, version and accent_color live there.
 package:
-  app_id: 6e73821a-ca55-46b1-b239-756d4c768a32
-  version: 0.0.1
-  accent_color: "#15803D"
-  short_name: LDO Terraform
-  full_name: Libre DevOps Terraform Author
-  short_description: Writes Terraform to the Libre DevOps standard.
+  short_name: "{{brand_short}} Terraform"
+  full_name: "{{brand_name}} Terraform Author"
+  short_description: Writes Terraform to the {{brand_name}} standard.

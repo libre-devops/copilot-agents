@@ -10,11 +10,11 @@ An agent is one directory under `agents/`, holding `agent.yaml` (the definition)
    ```bash
    mkdir -p agents/my-agent
    cp agents/terraform-author/agent.yaml agents/my-agent/agent.yaml
-   python3 -c "import uuid; print(uuid.uuid4())"   # a fresh app_id
    ```
 
-   Change `id` to match the directory name, and give `package.app_id` the new GUID. Two agents
-   sharing an `app_id` will collide on install.
+   Change `id` to match the directory name. You do **not** need a GUID: app ids derive from the
+   active profile's namespace, so a new agent gets a stable, unique id in every profile
+   automatically. See [profiles.md](profiles.md).
 
 2. **Write the instruction fragments.** Put anything reusable in `fragments/shared/`, and anything
    specific in `fragments/<topic>/`. List them in order under `instructions:`. Order matters: the
@@ -23,9 +23,12 @@ An agent is one directory under `agents/`, holding `agent.yaml` (the definition)
 3. **Render and lint.**
 
    ```bash
-   just render my-agent
+   just render default my-agent
    just lint
    ```
+
+   Any organisation specific value belongs in a `{{token}}`, not in the fragment. Add the token to
+   `profiles/default.yaml` in the same change, or the build will fail and name the file.
 
 4. **Commit `rendered/`.** It is the drop-in delivery path and CI gates on it being current.
 

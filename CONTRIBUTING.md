@@ -33,6 +33,16 @@ for people who never run the toolchain.
   limit. They cannot prove the agent behaves. If you change instructions, say in the pull request
   what you ran in a tenant and what it did. See the testing section of `docs/authoring.md`.
 
+## Branding
+
+Never hardcode an organisation's name, URL, colour or product code in a fragment or an agent
+definition. Add a `{{token}}` and give it a value in `profiles/default.yaml`. The renderer fails the
+build on an unresolved placeholder, and the linter warns when default branding leaks into a
+rebranded render.
+
+Profiles other than `default` and `example` are gitignored on purpose. Do not add exceptions for
+them: see [docs/profiles.md](./docs/profiles.md).
+
 ## Adding an agent
 
 See [docs/authoring.md](./docs/authoring.md). In short: a new directory under `agents/`, a fresh

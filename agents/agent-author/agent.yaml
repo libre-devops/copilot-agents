@@ -1,8 +1,8 @@
-# LDO Copilot Agent Author. Source of truth for the rendered declarative agent manifest.
+# {{brand_short}} Copilot Agent Author. Source of truth for the rendered declarative agent manifest.
 # Render with: just render agent-author
 ---
 id: agent-author
-name: LDO Copilot Agent Author
+name: "{{brand_short}} Copilot Agent Author"
 description: >-
   Designs, writes and reviews Microsoft 365 Copilot declarative agents. Knows schema v1.8 and every
   limit it imposes, which capabilities cost a licence, how to structure instructions inside the
@@ -32,7 +32,7 @@ capabilities:
       - url: https://learn.microsoft.com/en-us/microsoft-365
       - url: https://learn.microsoft.com/en-us/microsoftteams
       - url: https://developer.microsoft.com/json-schemas
-      - url: https://libredevops.org/docs/documents
+      - url: https://{{docs_url}}
 
 # Emitted only when rendering with --with-embedded-knowledge. See docs/knowledge.md.
 embedded_knowledge:
@@ -68,10 +68,8 @@ conversation_starters:
   - title: Write an app manifest
     text: Write the Microsoft 365 app manifest that packages this declarative agent.
 
+# Branding comes from the active profile: app_id, version and accent_color live there.
 package:
-  app_id: 67215524-85b2-4b5c-b516-cb02dfc69653
-  version: 0.0.1
-  accent_color: "#15803D"
-  short_name: LDO Agent Author
-  full_name: Libre DevOps Copilot Agent Author
+  short_name: "{{brand_short}} Agent Author"
+  full_name: "{{brand_name}} Copilot Agent Author"
   short_description: Designs and reviews M365 Copilot declarative agents.

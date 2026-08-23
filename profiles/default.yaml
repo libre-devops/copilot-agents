@@ -1,0 +1,36 @@
+# The Libre DevOps branding profile. Rendered into the committed rendered/ tree.
+#
+# A profile is everything about an agent that is not its behaviour: who publishes it, what it is
+# called, what colour it is, and which app ids it claims. Fork this file to publish the same agents
+# under your own organisation without touching a single fragment. See docs/profiles.md.
+---
+id: default
+
+# Substituted into fragments and agent definitions wherever {{token}} appears. The renderer fails
+# the build if any {{placeholder}} survives substitution, so a typo cannot ship.
+tokens:
+  brand_short: LDO
+  brand_name: Libre DevOps
+  brand_infix: ldo
+  registry_url: registry.terraform.io/namespaces/libre-devops
+  docs_url: libredevops.org/docs/documents
+
+# developer{} in the Microsoft 365 app manifest. All four are required and must resolve over HTTPS.
+publisher:
+  name: Libre DevOps
+  website_url: https://libredevops.org
+  privacy_url: https://github.com/libre-devops/copilot-agents#privacy
+  terms_url: https://github.com/libre-devops/copilot-agents/blob/main/LICENSE
+
+package:
+  version: 0.0.2
+  accent_color: "#15803D"
+
+# App ids are per publisher: two organisations must never share one. Anything not listed here is
+# derived deterministically as uuid5(app_id_namespace, agent_id), so adding an agent needs no
+# manual GUID and the id stays stable across renders.
+app_id_namespace: 05e4add6-54db-57af-930c-3d56d1b01ac1
+app_ids:
+  terraform-author: 6e73821a-ca55-46b1-b239-756d4c768a32
+  logic-app-author: 9707f0fe-14fe-454e-afb0-22e3f0116882
+  agent-author: 67215524-85b2-4b5c-b516-cb02dfc69653

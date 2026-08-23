@@ -9,22 +9,37 @@ rejects a package that is missing either. Rather than commit two opaque binaries
 a chevron pair on the Libre DevOps green, with the symbol inside the 120x120 safe region so the
 hosts that crop the icon do not clip it.
 
-Usage:
-    uv run tools/make_icons.py
+The brand colour comes from a profile, so a rebranded package gets its own icons without anyone
+opening an image editor. The default profile writes to assets/ (committed); any other profile
+writes to build/<profile>/assets/ (gitignored).
 
-Writes assets/color.png and assets/outline.png.
+Usage:
+    uv run tools/make_icons.py                  # default profile
+    uv run tools/make_icons.py --profile acme
+    uv run tools/make_icons.py --color "#2563EB" --out-dir /tmp/icons
 """
 from __future__ import annotations
 
+import argparse
 import struct
 import sys
 import zlib
 from pathlib import Path
 
-ASSETS = Path(__file__).resolve().parent.parent / "assets"
+ROOT = Path(__file__).resolve().parent.parent
+ASSETS = ROOT / "assets"
+PROFILES = ROOT / "profiles"
+BUILD = ROOT / "build"
 
-BRAND = (0x15, 0x80, 0x3D)  # Libre DevOps green-700
+DEFAULT_BRAND = "#15803D"  # Libre DevOps green-700
 WHITE = (0xFF, 0xFF, 0xFF)
+
+
+def parse_hex(value: str) -> tuple[int, int, int]:
+    text = value.lstrip("#")
+    if len(text) != 6:
+        raise ValueError(f"expected #RRGGBB, got {value!r}")
+    return tuple(int(text[i : i + 2], 16) for i in (0, 2, 4))  # type: ignore[return-value]
 
 # Chevron pair "<>" in normalised coordinates, origin at the centre, half-extent 1.0.
 STROKES = [
@@ -104,18 +119,53 @@ def render(size: int, safe: int, background: tuple[int, int, int] | None) -> lis
     return pixels
 
 
-def main() -> int:
-    ASSETS.mkdir(parents=True, exist_ok=True)
+def generate(dest: Path, brand_hex: str) -> None:
+    """Write both icons into `dest`, using `brand_hex` as the colour icon background."""
+    dest.mkdir(parents=True, exist_ok=True)
+    brand = parse_hex(brand_hex)
 
     # Colour icon: 192x192, solid brand background, symbol inside the 120x120 safe region.
-    write_png(ASSETS / "color.png", 192, 192, render(192, 120, BRAND))
+    write_png(dest / "color.png", 192, 192, render(192, 120, brand))
 
     # Outline icon: 32x32, white symbol on a transparent background. Validation forbids extra
     # padding, so the safe box is oversized to push the glyph out to the canvas edge.
-    write_png(ASSETS / "outline.png", 32, 32, render(32, 46, None))
+    write_png(dest / "outline.png", 32, 32, render(32, 46, None))
 
+
+def profile_colour(name: str) -> str:
+    """Read the accent colour out of a profile without importing a YAML library."""
+    path = PROFILES / f"{name}.yaml"
+    if not path.is_file():
+        raise SystemExit(f"profile not found: profiles/{name}.yaml")
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("accent_color:"):
+            return stripped.split(":", 1)[1].strip().strip("\"'")
+    raise SystemExit(f"profiles/{name}.yaml has no package.accent_color")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Draw the app package icons.")
+    parser.add_argument("--profile", default="default", help="branding profile to take the colour from")
+    parser.add_argument("--color", help="override the brand colour, as #RRGGBB")
+    parser.add_argument("--out-dir", help="override the output directory")
+    args = parser.parse_args()
+
+    colour = args.color or (DEFAULT_BRAND if args.profile == "default" else profile_colour(args.profile))
+    if args.out_dir:
+        dest = Path(args.out_dir)
+    else:
+        dest = ASSETS if args.profile == "default" else BUILD / args.profile / "assets"
+
+    try:
+        generate(dest, colour)
+    except ValueError as exc:
+        print(f"ERROR {exc}", file=sys.stderr)
+        return 2
+
+    shown = dest.relative_to(ROOT) if dest.is_relative_to(ROOT) else dest
     for name in ("color.png", "outline.png"):
-        print(f"  wrote assets/{name} ({(ASSETS / name).stat().st_size} bytes)")
+        print(f"  wrote {shown}/{name} ({(dest / name).stat().st_size} bytes)")
     return 0
 
 

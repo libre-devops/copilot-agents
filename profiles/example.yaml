@@ -1,0 +1,32 @@
+# A worked example profile. Copy it, rename it, and change every value.
+#
+#   cp profiles/example.yaml profiles/acme.yaml
+#   just package acme
+#
+# Only default.yaml and example.yaml are tracked by git. Every other profile is ignored by
+# .gitignore on purpose, so an internal profile cannot be committed to a public repository by
+# accident. See docs/profiles.md.
+---
+id: example
+
+tokens:
+  brand_short: EX
+  brand_name: Example Org
+  brand_infix: ex
+  registry_url: registry.terraform.io/namespaces/example-org
+  docs_url: example.com/engineering/standards
+
+publisher:
+  name: Example Org
+  website_url: https://example.com
+  privacy_url: https://example.com/privacy
+  terms_url: https://example.com/terms
+
+package:
+  version: 0.0.1
+  accent_color: "#2563EB"
+
+# Leave app_ids empty to derive every id from the namespace below. Generate your own namespace with:
+#   python3 -c "import uuid; print(uuid.uuid5(uuid.NAMESPACE_DNS, 'example.com/copilot-agents'))"
+app_id_namespace: b443ef9b-7f40-5e49-b909-7dbe42045c31
+app_ids: {}

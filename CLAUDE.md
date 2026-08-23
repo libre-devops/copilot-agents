@@ -6,10 +6,14 @@ Libre DevOps standards.
 ## What this repo is
 
 A composition toolchain, not a Terraform module. Agent definitions in `agents/<id>/agent.yaml`
-declare an ordered list of instruction fragments from `fragments/`; `tools/render.py` concatenates
-them, enforces every platform limit, and writes `rendered/<id>/`; `tools/lint.py` validates the
-result against the vendored schema plus the semantics the schema cannot express; `--package` builds
-the uploadable app package into `dist/`.
+declare an ordered list of instruction fragments from `fragments/`; a branding profile in
+`profiles/<name>.yaml` supplies the publisher block, `{{token}}` values, colour and app ids;
+`tools/render.py` substitutes, concatenates, enforces every platform limit, and writes
+`rendered/<id>/` (default profile) or `build/<profile>/<id>/`; `tools/lint.py` validates the result
+against the vendored schema plus the semantics the schema cannot express; `--package` builds the
+uploadable app package into `dist/`.
+
+It is a collection that will grow. Terraform and Logic Apps are the first agents, not the scope.
 
 It is a sibling of `security-copilot-agents` (Microsoft **Security** Copilot agents, a different
 platform with a different manifest) and of the `libredevops-dot-org` standards this repo distils.
@@ -52,6 +56,18 @@ platform with a different manifest) and of the `libredevops-dot-org` standards t
   Instructions carry behaviour, knowledge carries facts. See `docs/instruction-budget.md`.
 - Do not delete `shared/grounding.md` or `shared/output-contract.md` to free budget. They are what
   stop the agent inventing provider arguments and truncating files.
+
+### Branding stays in the profile
+
+- **Never hardcode an organisation's name, URL, colour or product code in a fragment or an agent
+  definition.** Use a `{{token}}` and add it to `profiles/default.yaml`. The renderer fails on an
+  unresolved placeholder, and the linter warns when a default token value leaks into a rebranded
+  render.
+- Watch for branding that is not a proper noun. The `ldo` product infix inside a generated storage
+  account name is branding, and nothing but the leakage check would have caught it.
+- `profiles/` is allowlisted in `.gitignore`. Never add an exception for someone's internal or
+  customer profile, and never commit one. Only `default.yaml` and `example.yaml` are tracked.
+- Keep `example.yaml` generic. It is a public file.
 
 ### Agent content rules (conditions of entry to `agents/`)
 

@@ -16,11 +16,18 @@ push prose into a knowledge source: knowledge content is subject to cross-prompt
 classifiers and is not honoured as maker-authored instruction. So the build fails loudly on
 overflow rather than silently truncating.
 
+Branding lives in a profile (`profiles/<name>.yaml`), never in a fragment or an agent definition.
+A profile supplies the publisher block, the accent colour, the app ids and a map of `{{token}}`
+substitutions, so the same agents can be published under a different organisation without editing
+a word of their behaviour. The default profile renders into the committed `rendered/` tree; every
+other profile renders into `build/<profile>/`, which is gitignored.
+
 Usage:
-    uv run tools/render.py                       # render every agent
+    uv run tools/render.py                       # render every agent, default profile
     uv run tools/render.py terraform-author      # render one
+    uv run tools/render.py --profile acme        # render under a different brand
     uv run tools/render.py --check               # fail if rendered/ is stale (CI drift gate)
-    uv run tools/render.py --package             # also write dist/<id>-<version>.zip
+    uv run tools/render.py --package             # also write the app package zips
     uv run tools/render.py --with-embedded-knowledge
 
 Exit codes: 0 clean, 1 a limit was breached or rendered/ is stale, 2 usage.
@@ -30,20 +37,32 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shutil
 import sys
 import tempfile
+import uuid
 import zipfile
 from pathlib import Path
 
 import yaml
 
+import make_icons
+
 ROOT = Path(__file__).resolve().parent.parent
 AGENTS = ROOT / "agents"
 FRAGMENTS = ROOT / "fragments"
 RENDERED = ROOT / "rendered"
+BUILD = ROOT / "build"
 DIST = ROOT / "dist"
 ASSETS = ROOT / "assets"
+PROFILES = ROOT / "profiles"
+DEFAULT_PROFILE = "default"
+
+# {{token}} placeholders substituted from the profile. Chosen to avoid colliding with the manifest's
+# own [[localization_key]] syntax and with the ${...} and @{...} forms discussed in the fragments.
+TOKEN_RE = re.compile(r"\{\{\s*([a-z0-9_]+)\s*\}\}")
+LEFTOVER_RE = re.compile(r"\{\{.*?\}\}", re.S)
 
 SCHEMA_VERSION = "v1.8"
 SCHEMA_URL = f"https://developer.microsoft.com/json-schemas/copilot/declarative-agent/{SCHEMA_VERSION}/schema.json"
@@ -68,15 +87,8 @@ MAX_APP_NAME_SHORT = 30
 MAX_APP_NAME_FULL = 100
 MAX_APP_DESC_SHORT = 80
 MAX_APP_DESC_FULL = 4000
+MAX_DEVELOPER_NAME = 32
 
-# developer.privacyUrl and developer.termsOfUseUrl are required and must resolve. They point into
-# this repository rather than at libredevops.org/privacy and /terms, which do not exist.
-DEVELOPER = {
-    "name": "Libre DevOps",
-    "websiteUrl": "https://libredevops.org",
-    "privacyUrl": "https://github.com/libre-devops/copilot-agents#privacy",
-    "termsOfUseUrl": "https://github.com/libre-devops/copilot-agents/blob/main/LICENSE",
-}
 
 
 class RenderError(Exception):
@@ -87,7 +99,77 @@ def fail(agent_id: str, message: str) -> None:
     raise RenderError(f"{agent_id}: {message}")
 
 
-def compose_instructions(agent_id: str, names: list[str]) -> str:
+def load_profile(name: str) -> dict:
+    """Load a branding profile and check it carries everything a package needs."""
+    path = PROFILES / f"{name}.yaml"
+    if not path.is_file():
+        available = sorted(p.stem for p in PROFILES.glob("*.yaml"))
+        raise RenderError(
+            f"profile {name!r} not found at profiles/{name}.yaml. "
+            f"Available: {', '.join(available)}. Copy profiles/example.yaml to start a new one."
+        )
+    profile = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    for key in ("tokens", "publisher", "package", "app_id_namespace"):
+        if key not in profile:
+            raise RenderError(f"profile {name!r} is missing required key {key!r}")
+    for key in ("name", "website_url", "privacy_url", "terms_url"):
+        value = profile["publisher"].get(key)
+        if not value:
+            raise RenderError(f"profile {name!r}: publisher.{key} is required by the app manifest")
+        if key.endswith("_url") and not str(value).startswith("https://"):
+            raise RenderError(f"profile {name!r}: publisher.{key} must be an HTTPS URL, got {value!r}")
+    if len(profile["publisher"]["name"]) > MAX_DEVELOPER_NAME:
+        raise RenderError(
+            f"profile {name!r}: publisher.name is "
+            f"{len(profile['publisher']['name'])} characters, the limit is {MAX_DEVELOPER_NAME}"
+        )
+    try:
+        uuid.UUID(str(profile["app_id_namespace"]))
+    except (ValueError, AttributeError, TypeError):
+        raise RenderError(f"profile {name!r}: app_id_namespace must be a GUID") from None
+    profile.setdefault("app_ids", {})
+    profile["id"] = name
+    return profile
+
+
+def substitute(text: str, tokens: dict, where: str) -> str:
+    """Replace every {{token}} from the profile, and refuse to let an unresolved one through."""
+    missing: set[str] = set()
+
+    def replace(match: "re.Match[str]") -> str:
+        key = match.group(1)
+        if key not in tokens:
+            missing.add(key)
+            return match.group(0)
+        return str(tokens[key])
+
+    result = TOKEN_RE.sub(replace, text)
+    if missing:
+        raise RenderError(
+            f"{where}: no value in the profile for {', '.join(sorted(repr(m) for m in missing))}. "
+            "Add it under `tokens:` in the profile."
+        )
+    # A malformed placeholder such as {{brand name}} never matches TOKEN_RE, so catch it separately
+    # rather than let it render into a shipped manifest.
+    leftover = LEFTOVER_RE.search(result)
+    if leftover:
+        raise RenderError(f"{where}: unresolved placeholder {leftover.group(0)!r}")
+    return result
+
+
+def app_id_for(agent_id: str, profile: dict) -> str:
+    """An explicit id from the profile, else one derived so it is unique per publisher and stable."""
+    explicit = profile["app_ids"].get(agent_id)
+    if explicit:
+        try:
+            uuid.UUID(str(explicit))
+        except ValueError:
+            raise RenderError(f"profile {profile['id']}: app_ids.{agent_id} is not a GUID") from None
+        return str(explicit)
+    return str(uuid.uuid5(uuid.UUID(str(profile["app_id_namespace"])), agent_id))
+
+
+def compose_instructions(agent_id: str, names: list[str], tokens: dict) -> str:
     """Concatenate instruction fragments in declared order, separated by a blank line."""
     if not names:
         fail(agent_id, "no instruction fragments declared")
@@ -96,7 +178,7 @@ def compose_instructions(agent_id: str, names: list[str]) -> str:
         path = FRAGMENTS / name
         if not path.is_file():
             fail(agent_id, f"instruction fragment not found: fragments/{name}")
-        text = path.read_text(encoding="utf-8").strip()
+        text = substitute(path.read_text(encoding="utf-8"), tokens, f"fragments/{name}").strip()
         if not text:
             fail(agent_id, f"instruction fragment is empty: fragments/{name}")
         parts.append(text)
@@ -216,7 +298,7 @@ def build_declarative_agent(agent_id: str, spec: dict, instructions: str, embedd
     return manifest
 
 
-def build_app_manifest(agent_id: str, spec: dict) -> dict:
+def build_app_manifest(agent_id: str, spec: dict, profile: dict) -> dict:
     pkg = spec["package"]
     short_name = pkg["short_name"]
     full_name = pkg["full_name"]
@@ -232,32 +314,54 @@ def build_app_manifest(agent_id: str, spec: dict) -> dict:
         if len(value) > limit:
             fail(agent_id, f"{label} is {len(value)} characters, the limit is {limit}")
 
+    publisher = profile["publisher"]
+    accent = profile["package"]["accent_color"]
+    if not re.fullmatch(r"#[0-9a-fA-F]{6}", str(accent)):
+        fail(agent_id, f"profile {profile['id']}: package.accent_color must be #RRGGBB, got {accent!r}")
+
     return {
         "$schema": APP_SCHEMA_URL,
         "manifestVersion": APP_MANIFEST_VERSION,
-        "version": pkg["version"],
-        "id": pkg["app_id"],
-        "developer": DEVELOPER,
+        "version": str(profile["package"]["version"]),
+        "id": app_id_for(agent_id, profile),
+        "developer": {
+            "name": publisher["name"],
+            "websiteUrl": publisher["website_url"],
+            "privacyUrl": publisher["privacy_url"],
+            "termsOfUseUrl": publisher["terms_url"],
+        },
         "icons": {"color": "color.png", "outline": "outline.png"},
         "name": {"short": short_name, "full": full_name},
         "description": {"short": short_desc, "full": full_desc},
-        "accentColor": pkg["accent_color"],
+        "accentColor": accent,
         "copilotAgents": {
             "declarativeAgents": [{"id": agent_id, "file": "declarativeAgent.json"}]
         },
     }
 
 
-def render_one(agent_id: str, embedded: bool, dest_root: Path = RENDERED) -> dict[str, str]:
-    spec = yaml.safe_load((AGENTS / agent_id / "agent.yaml").read_text(encoding="utf-8"))
+def icon_source(profile: dict) -> Path:
+    """Where this profile's icons live, generating them on first use for a non-default profile."""
+    if profile["id"] == DEFAULT_PROFILE:
+        return ASSETS
+    dest = BUILD / profile["id"] / "assets"
+    if not (dest / "color.png").is_file():
+        make_icons.generate(dest, str(profile["package"]["accent_color"]))
+        print(f"  generated icons for profile {profile['id']} in {dest.relative_to(ROOT)}")
+    return dest
+
+
+def render_one(agent_id: str, profile: dict, embedded: bool, dest_root: Path) -> dict[str, str]:
+    raw = (AGENTS / agent_id / "agent.yaml").read_text(encoding="utf-8")
+    spec = yaml.safe_load(substitute(raw, profile["tokens"], f"agents/{agent_id}/agent.yaml"))
     if spec.get("id") != agent_id:
         fail(agent_id, f"id in agent.yaml is {spec.get('id')!r}, expected {agent_id!r}")
 
-    instructions = compose_instructions(agent_id, spec.get("instructions", []))
+    instructions = compose_instructions(agent_id, spec.get("instructions", []), profile["tokens"])
     check_dashes(agent_id, instructions)
 
     da = build_declarative_agent(agent_id, spec, instructions, embedded)
-    app = build_app_manifest(agent_id, spec)
+    app = build_app_manifest(agent_id, spec, profile)
 
     # Wipe first. `--check` promises that rendered/ equals a fresh render, which is only true if
     # a file that is no longer produced also disappears (an embedded knowledge file left behind by
@@ -274,7 +378,7 @@ def render_one(agent_id: str, embedded: bool, dest_root: Path = RENDERED) -> dic
         files[filename] = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
     for icon in ("color.png", "outline.png"):
-        source = ASSETS / icon
+        source = icon_source(profile) / icon
         if source.is_file():
             shutil.copyfile(source, out / icon)
             files[icon] = hashlib.sha256(source.read_bytes()).hexdigest()
@@ -292,10 +396,12 @@ def render_one(agent_id: str, embedded: bool, dest_root: Path = RENDERED) -> dic
     return files
 
 
-def package_one(agent_id: str, version: str) -> Path:
-    DIST.mkdir(parents=True, exist_ok=True)
-    target = DIST / f"{agent_id}-{version}.zip"
-    source = RENDERED / agent_id
+def package_one(agent_id: str, profile: dict, source_root: Path) -> Path:
+    version = str(profile["package"]["version"])
+    dist = DIST if profile["id"] == DEFAULT_PROFILE else DIST / profile["id"]
+    dist.mkdir(parents=True, exist_ok=True)
+    target = dist / f"{agent_id}-{version}.zip"
+    source = source_root / agent_id
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in sorted(source.iterdir()):
             if path.is_file():
@@ -305,16 +411,35 @@ def package_one(agent_id: str, version: str) -> Path:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Render Libre DevOps declarative agents.")
+    parser = argparse.ArgumentParser(description="Render declarative agents from a branding profile.")
     parser.add_argument("agents", nargs="*", help="agent ids to render (default: all)")
+    parser.add_argument(
+        "--profile",
+        default=DEFAULT_PROFILE,
+        help="branding profile in profiles/<name>.yaml (default: %(default)s)",
+    )
     parser.add_argument("--check", action="store_true", help="fail if rendered/ differs from a fresh render")
-    parser.add_argument("--package", action="store_true", help="also write dist/<id>-<version>.zip")
+    parser.add_argument("--package", action="store_true", help="also write the app package zips")
     parser.add_argument(
         "--with-embedded-knowledge",
         action="store_true",
         help="emit the EmbeddedKnowledge capability (see docs/knowledge.md for why this is off by default)",
     )
     args = parser.parse_args()
+
+    if args.check and args.profile != DEFAULT_PROFILE:
+        print(
+            f"--check applies to the {DEFAULT_PROFILE} profile only: rendered/ is the committed "
+            f"output of that profile, and profile {args.profile!r} renders into build/.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        profile = load_profile(args.profile)
+    except RenderError as exc:
+        print(f"ERROR {exc}", file=sys.stderr)
+        return 2
 
     available = sorted(p.name for p in AGENTS.iterdir() if (p / "agent.yaml").is_file())
     selected = args.agents or available
@@ -324,35 +449,34 @@ def main() -> int:
         print(f"available: {', '.join(available)}", file=sys.stderr)
         return 2
 
-    # Cross-agent check, always over every agent rather than only the selected ones: two agents
-    # sharing an app_id collide on install, and rendering one at a time must not hide that.
+    # Cross-agent check over every agent rather than only the selected ones: two agents sharing an
+    # app id collide on install, and rendering one at a time must not hide that.
     ids: dict[str, list[str]] = {}
     for agent_id in available:
         try:
-            spec = yaml.safe_load((AGENTS / agent_id / "agent.yaml").read_text(encoding="utf-8"))
-            app_id = (spec.get("package") or {}).get("app_id")
-        except yaml.YAMLError as exc:
-            print(f"ERROR {agent_id}: agent.yaml is not valid YAML: {exc}", file=sys.stderr)
+            ids.setdefault(app_id_for(agent_id, profile), []).append(agent_id)
+        except RenderError as exc:
+            print(f"ERROR {exc}", file=sys.stderr)
             return 1
-        if app_id:
-            ids.setdefault(app_id, []).append(agent_id)
     clashes = {k: v for k, v in ids.items() if len(v) > 1}
     if clashes:
-        print("\nERROR duplicate package.app_id, which collides on install:", file=sys.stderr)
+        print("\nERROR duplicate app id, which collides on install:", file=sys.stderr)
         for app_id, owners in sorted(clashes.items()):
             print(f"  {app_id}: {', '.join(owners)}", file=sys.stderr)
         return 1
 
-    # In --check mode render into a scratch tree and compare. A gate that writes to the thing it
-    # is checking would pass on a second local run even though the commit is still stale.
+    live_root = RENDERED if args.profile == DEFAULT_PROFILE else BUILD / args.profile
+
     with tempfile.TemporaryDirectory() as tmp:
-        dest_root = Path(tmp) if args.check else RENDERED
+        # In --check mode render into a scratch tree and compare. A gate that writes to the thing it
+        # is checking would pass on a second local run even though the commit is still stale.
+        dest_root = Path(tmp) if args.check else live_root
         verb = "Checking" if args.check else "Rendering"
-        print(f"{verb} {len(selected)} agent(s) at schema {SCHEMA_VERSION}:")
+        print(f"{verb} {len(selected)} agent(s) at schema {SCHEMA_VERSION}, profile {args.profile}:")
         inventory: dict[str, dict] = {}
         try:
             for agent_id in selected:
-                inventory[agent_id] = render_one(agent_id, args.with_embedded_knowledge, dest_root)
+                inventory[agent_id] = render_one(agent_id, profile, args.with_embedded_knowledge, dest_root)
         except RenderError as exc:
             print(f"\nERROR {exc}", file=sys.stderr)
             return 1
@@ -363,9 +487,9 @@ def main() -> int:
         if args.check:
             drifted: list[str] = []
             for agent_id in selected:
-                fresh_dir, live_dir = dest_root / agent_id, RENDERED / agent_id
+                fresh_dir, check_dir = dest_root / agent_id, live_root / agent_id
                 fresh = {p.name: p.read_bytes() for p in fresh_dir.glob("*") if p.is_file()}
-                live = {p.name: p.read_bytes() for p in live_dir.glob("*") if p.is_file()} if live_dir.is_dir() else {}
+                live = {p.name: p.read_bytes() for p in check_dir.glob("*") if p.is_file()} if check_dir.is_dir() else {}
                 for name in sorted(set(fresh) | set(live)):
                     if name not in live:
                         drifted.append(f"rendered/{agent_id}/{name} (missing)")
@@ -382,14 +506,15 @@ def main() -> int:
             return 0
 
     inv_text = json.dumps(
-        {"schema_version": SCHEMA_VERSION, "agents": inventory}, indent=2, ensure_ascii=False
+        {"schema_version": SCHEMA_VERSION, "profile": args.profile, "agents": inventory},
+        indent=2,
+        ensure_ascii=False,
     ) + "\n"
-    (RENDERED / "inventory.json").write_text(inv_text, encoding="utf-8")
+    (live_root / "inventory.json").write_text(inv_text, encoding="utf-8")
 
     if args.package:
         for agent_id in selected:
-            spec = yaml.safe_load((AGENTS / agent_id / "agent.yaml").read_text(encoding="utf-8"))
-            package_one(agent_id, spec["package"]["version"])
+            package_one(agent_id, profile, live_root)
 
     return 0
 

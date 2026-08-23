@@ -1,21 +1,22 @@
 {
   "schema_version": "v1.8",
+  "profile": "default",
   "agents": {
     "agent-author": {
       "declarativeAgent.json": "070ebcc49f3da164e994f3c6bde2e817f3a6146258437b099fac0b3c7f8a8ecc",
-      "manifest.json": "59b8835ce16783271132e3ff6add7a54904a15e733106057339e949b7a4a7e09",
+      "manifest.json": "269b9f580a8a26748c01d5b0daa3350f93c4304da7ca919bf54d47588d738dac",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672"
     },
     "logic-app-author": {
       "declarativeAgent.json": "10a4a350556eeed57ee6ad85d0fce4af90c664981d1ac629d4baad6b2567e07d",
-      "manifest.json": "324182043cdd143e6ac709daeadd3a28445ca899d4e9f43580ec29fd0e90bdc8",
+      "manifest.json": "caed081c8af0fbf7e8706785f1c383f3db813c4419a76068629bf685515b7736",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672"
     },
     "terraform-author": {
-      "declarativeAgent.json": "47db9c991ff91f9d853da2310e347453cf301c81a891e27abf453bb7136c99da",
-      "manifest.json": "33df5f18beb410ebf698cfe440588bbf93279dacd5906a49473ba45d9fc87cd4",
+      "declarativeAgent.json": "721cd4f491f0f2839980ec5c4211e2a21e6566657c244cb4a37dc797079fd018",
+      "manifest.json": "e25978f27fee67f9560432e2bd7354f2f1cd61a2910902cac4522dde41966a0f",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672"
     }

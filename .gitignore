@@ -1,5 +1,14 @@
-# Build output. rendered/ is committed on purpose: it is the drop-in delivery path.
+# Build output. rendered/ is committed on purpose: it is the drop-in delivery path for the
+# default profile. Every other profile renders into build/ and is never committed.
 dist/
+build/
+
+# Branding profiles are allowlisted, not denylisted. A profile you add is ignored unless it is
+# named below, so an internal or customer profile cannot reach a public repository by accident.
+profiles/*
+!profiles/default.yaml
+!profiles/example.yaml
+!profiles/README.md
 
 # Python
 __pycache__/

@@ -40,5 +40,5 @@ A workspace root adds `providers.tf`, `backend.tf`, gitignored `override.tf`, an
 Construct names as `${prefix}-${infix}-${outfix}-${suffix}[-${optional}][-${numbering}]`, all lower
 case: CAF type abbreviation, 2 to 4 letter product code, region code (`uks`, `euw`), environment
 (`dev`, `tst`, `prd`), optional qualifier, zero-padded ordinal. Resource types that forbid hyphens
-(storage accounts, VMs) drop the dashes: `saldouksprd001`. Build the name inside the module from
+(storage accounts, VMs) drop the dashes: `sa{{brand_infix}}uksprd001`. Build the name inside the module from
 structured inputs so callers cannot override it ad hoc.
