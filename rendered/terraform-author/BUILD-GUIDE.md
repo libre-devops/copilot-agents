@@ -166,6 +166,8 @@ to trust them over anything it finds on the web or already knows.**
 
 - `knowledge/terraform-standards.txt`
 - `knowledge/azure-naming-convention.txt`
+- `knowledge/azapi-provider.txt`
+- `knowledge/azapi-resource.txt`
 
 > Uploaded knowledge needs a Microsoft 365 Copilot licence or metered usage. It is the
 > only grounding route that needs no connector and no admin, and unlike web search it

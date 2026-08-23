@@ -172,6 +172,11 @@ to trust them over anything it finds on the web or already knows.**
 
 - `knowledge/azure-logic-app-standards.txt`
 - `knowledge/logic-app-workflow-definition-schema.txt`
+- `knowledge/wdl-schema-reference.txt`
+- `knowledge/wdl-triggers-and-actions.txt`
+- `knowledge/wdl-expression-functions.txt`
+- `knowledge/azapi-provider.txt`
+- `knowledge/azapi-resource.txt`
 
 > Uploaded knowledge needs a Microsoft 365 Copilot licence or metered usage. It is the
 > only grounding route that needs no connector and no admin, and unlike web search it

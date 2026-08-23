@@ -39,6 +39,8 @@ capabilities:
 knowledge_files:
   - terraform-standards.txt
   - azure-naming-convention.txt
+  - azapi-provider.txt
+  - azapi-resource.txt
 
 user_overrides:
   - path: "$.capabilities[?(@.name == 'WebSearch')]"

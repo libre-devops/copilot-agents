@@ -13,20 +13,27 @@
     "logic-app-author": {
       "declarativeAgent.json": "4163f3c7e87c72b8b7611c6bd8181c3388be4ab05311911bb0d2a90e6021ab31",
       "manifest.json": "b16f8eb2b49d85c67fa5419267837c90c93fac1caa3eff64de9e9fc470228e31",
-      "BUILD-GUIDE.md": "c76853eb3ee7c52d12746ce1d85c5e4fe9396becf934296b9b684cbc8987f6f5",
+      "BUILD-GUIDE.md": "59aef825a60be44a4414503f70558779820b713631445daaada948175626ab64",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
       "knowledge/azure-logic-app-standards.txt": "e1ea8548572f09e46f7a2fb452d91ce767ed279b49ad382037682b915bf396d8",
-      "knowledge/logic-app-workflow-definition-schema.txt": "7b2d3f9a909066d6c0dfc224cb78cabc1b4e3686d4bc89ab29a5aea8633747ae"
+      "knowledge/logic-app-workflow-definition-schema.txt": "7b2d3f9a909066d6c0dfc224cb78cabc1b4e3686d4bc89ab29a5aea8633747ae",
+      "knowledge/wdl-schema-reference.txt": "fbe9e336d9963e2bc63e74b56af745fccd841a1afc73496bcfdec04414d09978",
+      "knowledge/wdl-triggers-and-actions.txt": "2a88e1e070b2d182bf194b838921e688df454800f2318d300df570adf8ded9d4",
+      "knowledge/wdl-expression-functions.txt": "66f856f912b1bfd60557705106de837a2821d200a5093ea223aca714cfd5f34f",
+      "knowledge/azapi-provider.txt": "91470518ff416d4d60c43fce3a882f32ab39a5fa8e72132baba2abb320fc91e2",
+      "knowledge/azapi-resource.txt": "a35685604045bc9af16836b06a64b8ce7e3d49b023aff0a8afa6fa07d2d5be1b"
     },
     "terraform-author": {
       "declarativeAgent.json": "2f287fc775e5e15bfbd28da01d7594f030267599616a6b9f9b9d3d3f32d99ea5",
       "manifest.json": "b1c50cd0f65a635b4a3545c8b63f14f8ea59126d203d2df1222f88d6b97efcfe",
-      "BUILD-GUIDE.md": "cc49a44fdc9c810163962e38ddc4492bcd5401845f26fd7ad5a3d412caca7dfb",
+      "BUILD-GUIDE.md": "6cb7ad7f979a5a5554dceedd41b3a982a5af25fa0017dac57b3cdd75a5b047be",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
       "knowledge/terraform-standards.txt": "8ea70123d3c0e8d1a725a0a2853deb1fb3e4b09c3445b6af4ec41e5384cf2055",
-      "knowledge/azure-naming-convention.txt": "b352220b177d13962f660ba07f157e151f10a7e7d66be29a0672cfca32c9b503"
+      "knowledge/azure-naming-convention.txt": "b352220b177d13962f660ba07f157e151f10a7e7d66be29a0672cfca32c9b503",
+      "knowledge/azapi-provider.txt": "91470518ff416d4d60c43fce3a882f32ab39a5fa8e72132baba2abb320fc91e2",
+      "knowledge/azapi-resource.txt": "a35685604045bc9af16836b06a64b8ce7e3d49b023aff0a8afa6fa07d2d5be1b"
     }
   }
 }

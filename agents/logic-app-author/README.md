@@ -25,8 +25,23 @@ view, ARM resource GET) and returns the same shape.
 
 ## Knowledge
 
-`WebSearch`, scoped to the Libre DevOps standards and Microsoft Learn's Azure and connector
-documentation.
+Seven uploaded documents, which is what makes it authoritative rather than merely fluent:
+
+| File | What it is |
+|---|---|
+| `azure-logic-app-standards.txt` | the Libre DevOps Azure Logic App Standard |
+| `logic-app-workflow-definition-schema.txt` | the 2016-06-01 workflow definition JSON schema |
+| `wdl-schema-reference.txt` | Microsoft's Workflow Definition Language schema reference |
+| `wdl-triggers-and-actions.txt` | every trigger and action type, with its inputs |
+| `wdl-expression-functions.txt` | the full WDL expression function list |
+| `azapi-provider.txt` | the Terraform AzApi provider overview |
+| `azapi-resource.txt` | the `azapi_resource` reference |
+
+AzApi is there because a workflow deployed through `azapi_resource` is a different shape from the
+`azurerm` one, and the agent has to know which it is writing.
+
+Plus `WebSearch`, scoped to the Libre DevOps standards and Microsoft Learn's Azure and connector
+documentation, for anything the files do not cover.
 
 The Azure workflow definition schema is wired up as `EmbeddedKnowledge` but is **not** rendered by
 default, because Microsoft's 1.8 reference states embedded files are not enabled yet. Enable it

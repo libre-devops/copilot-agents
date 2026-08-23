@@ -19,10 +19,16 @@ What it deliberately does NOT rewrite:
   at that address, and renaming them would send readers to a module that does not exist.
 - The `Source:` provenance line, and any `libre-devops` GitHub path, for the same reason.
 
+Output goes to knowledge/local/ by default, which is what an agent needs. Point --out-dir somewhere
+else to take ownership of the result instead: once the localised copy lives in your own docs
+repository you maintain it there, and the agent grounds in your document rather than in a derivative
+this tool regenerates.
+
 Usage:
     uv run tools/localise_knowledge.py                 # use profiles/default.yaml
     uv run tools/localise_knowledge.py --profile acme
     uv run tools/localise_knowledge.py --dry-run
+    uv run tools/localise_knowledge.py --out-dir ~/repos/our-standards/docs --suffix .md
 
 Exit codes: 0 done, 1 nothing to do or a problem, 2 usage.
 """
@@ -41,6 +47,8 @@ LOCAL = KNOWLEDGE / "local"
 PROFILES = ROOT / "profiles"
 
 # Which agent each pack belongs to, so the overrides block can be printed ready to paste.
+# Only the packs that carry house branding. Microsoft's and HashiCorp's references are theirs, and
+# rebranding them would be both pointless and misleading.
 PACK_OWNERS = {
     "terraform-standards.txt": "terraform-author",
     "azure-naming-convention.txt": "terraform-author",
@@ -120,7 +128,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Rebrand the shipped standards into knowledge/local/.")
     parser.add_argument("--profile", default="default", help="profile to take the branding from")
     parser.add_argument("--dry-run", action="store_true", help="report and stop")
+    parser.add_argument(
+        "--out-dir",
+        help="write the localised documents here instead of knowledge/local/, to take ownership",
+    )
+    parser.add_argument("--suffix", default=".txt", help="output file extension (default: %(default)s)")
     args = parser.parse_args()
+
+    destination = Path(args.out_dir).expanduser().resolve() if args.out_dir else LOCAL
+    owning = destination != LOCAL
 
     tokens = load_tokens(args.profile)
     profile_data = yaml.safe_load((PROFILES / f"{args.profile}.yaml").read_text(encoding="utf-8")) or {}
@@ -150,11 +166,17 @@ def main() -> int:
             print(f"  {name}: not present, skipping (run `just update-knowledge`)")
             continue
         updated, count = rewrite(source.read_text(encoding="utf-8"), mapping)
-        target_name = f"{args.profile}-{name}" if args.profile != "default" else f"local-{name}"
+        stem = Path(name).stem
+        if owning:
+            target_name = f"{stem}{args.suffix}"
+        else:
+            prefix = args.profile if args.profile != "default" else "local"
+            target_name = f"{prefix}-{stem}{args.suffix}"
         if not args.dry_run:
-            LOCAL.mkdir(parents=True, exist_ok=True)
-            (LOCAL / target_name).write_text(updated, encoding="utf-8")
-        print(f"  {name}: {count} replacement(s) -> knowledge/local/{target_name}")
+            destination.mkdir(parents=True, exist_ok=True)
+            (destination / target_name).write_text(updated, encoding="utf-8")
+        shown = destination if owning else Path("knowledge/local")
+        print(f"  {name}: {count} replacement(s) -> {shown}/{target_name}")
         written.setdefault(owner, []).append(f"local/{target_name}")
 
     if not written:
@@ -162,6 +184,13 @@ def main() -> int:
         return 1
     if args.dry_run:
         print("\nDry run, nothing written.\n")
+        return 0
+
+    if owning:
+        print(f"\nWritten to {destination}. These are yours now: maintain them there.")
+        print("\nTo ground the agents in them, copy or symlink them into knowledge/local/ and list")
+        print(f"them under agent_overrides in profiles/{args.profile}.yaml. Re-running this tool")
+        print("would overwrite them, so treat this as a one-off handover rather than a pipeline.\n")
         return 0
 
     print(f"\nAdd this to the bottom of profiles/{args.profile}.yaml:\n")

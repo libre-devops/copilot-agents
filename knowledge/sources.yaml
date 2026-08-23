@@ -29,6 +29,30 @@ sources:
     url: https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json
     format: json
 
+  # The Workflow Definition Language reference, from the public azure-docs mirror. The Learn page
+  # itself is generated from azure-docs-pr, which is private, so these are the fetchable originals.
+  - name: wdl-schema-reference.txt
+    title: Workflow Definition Language schema reference
+    url: https://raw.githubusercontent.com/MicrosoftDocs/azure-docs/main/articles/logic-apps/workflow-definition-language-schema.md
+
+  - name: wdl-triggers-and-actions.txt
+    title: Workflow Definition Language triggers and actions reference
+    url: https://raw.githubusercontent.com/MicrosoftDocs/azure-docs/main/articles/logic-apps/logic-apps-workflow-actions-triggers.md
+
+  - name: wdl-expression-functions.txt
+    title: Workflow Definition Language expression functions reference
+    url: https://raw.githubusercontent.com/MicrosoftDocs/azure-docs/main/articles/logic-apps/expression-functions-reference.md
+
+  # AzApi, because a Logic App workflow deployed through azapi_resource is a different shape from
+  # the azurerm one, and the agent has to know which it is writing.
+  - name: azapi-provider.txt
+    title: Terraform AzApi provider overview
+    url: https://raw.githubusercontent.com/Azure/terraform-provider-azapi/main/docs/index.md
+
+  - name: azapi-resource.txt
+    title: Terraform azapi_resource reference
+    url: https://raw.githubusercontent.com/Azure/terraform-provider-azapi/main/docs/resources/resource.md
+
   - name: declarative-agent-schema.txt
     title: Microsoft 365 declarative agent manifest schema v1.8
     url: https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.8/schema.json
