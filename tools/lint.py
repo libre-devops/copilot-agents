@@ -44,6 +44,9 @@ DEFAULT_PROFILE = "default"
 
 MAX_INSTRUCTIONS = 8000
 WARN_INSTRUCTIONS = 7200  # 90 percent of the cap
+# Agent Builder's Name field allows 30 characters where the manifest allows 100. An over-long name
+# packages fine but cannot be typed into the builder, so this is a warning, not an error.
+MAX_BUILDER_NAME = 30
 EMBEDDED_SUFFIXES = {".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt", ".pdf"}
 MAX_EMBEDDED_BYTES = 1_048_576
 
@@ -123,6 +126,14 @@ def lint_declarative_agent(path: Path, validator: Draft4Validator) -> None:
                     error(where, f"embedded file not present in the package: {filename}")
                 elif target.stat().st_size > MAX_EMBEDDED_BYTES:
                     error(where, f"embedded file over 1 MB: {filename}")
+
+    name = manifest.get("name") or ""
+    if len(name) > MAX_BUILDER_NAME:
+        warn(
+            where,
+            f"name is {len(name)} characters. The manifest allows 100, but Agent Builder's Name "
+            f"field allows {MAX_BUILDER_NAME}, so this agent cannot be built there as named.",
+        )
 
     if not manifest.get("conversation_starters"):
         warn(where, "no conversation starters, users get an empty prompt surface")

@@ -36,6 +36,11 @@ just validate            # render, drift gate, and lint. Offline, no tenant, no 
 just package             # build dist/<agent>-<version>.zip, ready to upload
 ```
 
+To put an agent into Copilot right now, open
+[`rendered/terraform-author/BUILD-GUIDE.md`](./rendered/terraform-author/BUILD-GUIDE.md) next to
+<https://m365.cloud.microsoft/agents/new> and paste your way down it. No admin, no upload, shareable
+by link. See [Build an agent in Agent Builder](#build-an-agent-in-agent-builder).
+
 Publishing under your own brand instead:
 
 ```bash
@@ -78,6 +83,7 @@ profiles/<name>.yaml      publisher, tokens, colour, app ids        who PUBLISHE
         |
 rendered/<id>/            committed output for the default profile
 build/<profile>/<id>/     everything else, gitignored
+  BUILD-GUIDE.md          paste-ready field values for Agent Builder
         |
    tools/lint.py          schema validation, semantics, and brand leakage
         |
@@ -110,8 +116,90 @@ Every render prints the spend, so the budget stays visible:
 
 Full reasoning in [docs/instruction-budget.md](./docs/instruction-budget.md).
 
-## Install an agent
+## Build an agent in Agent Builder
 
+This is the path most people want: no admin, no tenant upload, and you can share the result with a
+link in about five minutes.
+
+**Agent Builder has no import path.** It is a form, so you cannot upload a `declarativeAgent.json`
+into it. That is why every render also writes a paste-ready **`rendered/<agent>/BUILD-GUIDE.md`**,
+which is the bridge between the version controlled definition and the form. Open the guide next to
+the browser and work down it.
+
+### 1. Open Agent Builder
+
+Go to <https://m365.cloud.microsoft/agents/new>, or choose **New agent** in the left pane of the
+Microsoft 365 Copilot app. It also works from `microsoft365.com/chat`, `office.com/chat`, and the
+Teams desktop and web clients. It is not available on mobile.
+
+On the **New agent** screen choose **Skip to configure**. The natural language **Describe** tab
+writes instructions for you, which is not what you want here: the point of this repository is that
+the instructions are reviewed, budgeted and version controlled.
+
+### 2. Fill in the Configure tab
+
+Every field below comes straight out of the build guide, in the order Agent Builder asks for it.
+
+| Agent Builder field | Comes from | Limit |
+|---|---|---|
+| **Name** | guide section 1 | **30 characters**, tighter than the manifest's 100 |
+| **Icon** | `rendered/<agent>/color.png` | PNG, 192x192, 1 MB |
+| **Description** | guide section 2 | 1,000 characters |
+| **Instructions** | guide section 3, paste the whole block | 8,000 characters |
+| **Knowledge** (Enter URL) | guide section 4 | 4 public websites, two path levels each, no query strings |
+| **Capabilities** | guide section 5, both off | code interpreter, image generator |
+| **Model** | guide section 6 | Auto, Quick response, or Think deeper |
+| **Starter Prompts** | guide section 8 | 12 maximum |
+| **About this agent** (**...** menu) | guide section 9 | short description 80, URLs must be HTTPS |
+
+Two things worth getting right:
+
+- **Leave the Work content toggles off** (Cloud files, Outlook, Teams, People) unless you actually
+  want tenant grounding. They need a Microsoft 365 Copilot licence, and an unscoped source reaches
+  much further than most people expect. These agents are deliberately web only, which is why they
+  work on a plain licence.
+- **Leave "Only use specified sources" off.** An agent that cannot draw on its own knowledge of HCL
+  or JSON cannot write either. Agent Builder describes that toggle as prioritising your sources
+  rather than blocking model knowledge, which it cannot fully do.
+
+### 3. Test before you create
+
+Use the **Try it** pane. The build guide lists three checks worth doing every time:
+
+1. Run each starter prompt and confirm it does what its title claims.
+2. Ask for something just outside the agent's scope and confirm it declines rather than improvises.
+3. Paste content containing an embedded instruction and confirm the agent reports it as text it
+   found rather than acting on it.
+
+Then choose **Create**. The agent is private to you at first.
+
+### 4. Share it
+
+Choose **Share** on the created agent.
+
+- **Can chat** lets someone use it. **Can edit** makes them a co-owner with full rights. Groups can
+  only be added as chat users, so owners must be added individually.
+- **Copy chat link** and send it to whoever needs it.
+- **Org-wide sharing for chat access** lists the agent in the Agent Store for everyone in the
+  tenant. An admin policy can restrict or disable this.
+- To get into **Built by your org**, submit the agent to your org catalog and an admin reviews it in
+  the Microsoft 365 admin centre. The shared version and the catalog version are managed separately.
+
+After any later edit, choose **Update**, or your changes stay invisible to the people you shared
+with. If the agent uses SharePoint knowledge, reshare it so file permissions follow.
+
+Full detail: [Share and manage agents](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/agent-builder-share-manage-agents).
+
+### Round tripping
+
+Agent Builder can export what you built: **View all agents**, then **...**, then **Download .zip
+file**, which contains the agent manifest and icon and can be sideloaded into Teams. That zip cannot
+include embedded files. It is a one way trip out of the builder, so this repository stays the source
+of truth and the build guide stays the way in.
+
+## Install an agent from the app package
+
+The alternative path, for publishing to an organisation rather than sharing from your own account.
 There is no create API for a declarative agent, so this is an admin or portal step and this repo
 ends where the API does.
 
@@ -125,6 +213,17 @@ ends where the API does.
 Agents using only `WebSearch` work without a Microsoft 365 Copilot licence. Every other capability
 needs a licence or metered usage enabled in the tenant.
 
+## Which path should I use?
+
+| | Agent Builder | App package |
+|---|---|---|
+| Who can do it | any licensed user | a tenant admin |
+| Time to first share | minutes | an approval cycle |
+| How people get it | a chat link, or the Agent Store | assigned in Integrated apps |
+| Actions and API plugins | not supported, use Copilot Studio | supported |
+| Getting your definition in | paste from `BUILD-GUIDE.md` | upload the zip directly |
+| Best for | trying an agent, sharing with a team | rolling one out to an organisation |
+
 ## Repository layout
 
 | Path | What it holds |
@@ -132,7 +231,7 @@ needs a licence or metered usage enabled in the tenant.
 | [`agents/`](./agents) | one directory per agent: `agent.yaml` and a README |
 | [`profiles/`](./profiles) | branding profiles: publisher, tokens, colour, app ids. Yours is gitignored |
 | [`fragments/`](./fragments) | instruction fragments, the single source for shared house rules |
-| [`rendered/`](./rendered) | generated manifests and icons, committed and drift gated, never hand edited |
+| [`rendered/`](./rendered) | generated manifests, icons and Agent Builder build guides, committed and drift gated, never hand edited |
 | [`knowledge/`](./knowledge) | factual grounding material, vendored |
 | [`schema/`](./schema) | the vendored declarative agent JSON schema, refreshed by `just update-schema` |
 | [`tools/`](./tools) | the renderer, the linter, and the icon generator |
@@ -156,6 +255,10 @@ from memory:
 [declarative agent schema 1.8](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/declarative-agent-manifest-1.8),
 [write effective instructions](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/declarative-agent-instructions),
 [the Microsoft 365 app model for agents](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/agents-are-apps),
+[Agent Builder](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/agent-builder),
+[building agents with Agent Builder](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/agent-builder-build-agents),
+[adding knowledge sources](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/agent-builder-add-knowledge),
+[sharing and managing agents](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/agent-builder-share-manage-agents),
 and the [published JSON schema](https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.8/schema.json).
 
 Where they disagree with each other, the discrepancy is recorded in

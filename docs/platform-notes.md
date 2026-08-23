@@ -54,6 +54,30 @@ and `.pdf`. The reference's own `EmbeddedKnowledge` example lists `file2.csv`.
 **Decision:** the renderer and linter enforce the documented allowlist, which is why the workflow
 definition schema ships as `workflowdefinition.schema.txt` rather than `.json`.
 
+## Agent Builder's Name field is tighter than the manifest's
+
+Checked **2026-08-23** against
+[Build agents with Agent Builder](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/agent-builder-build-agents).
+
+The manifest allows a 100 character `name`. Agent Builder's **Name** field allows 30. An agent named
+between the two packages and validates perfectly but cannot be built in Agent Builder as named.
+
+**Decision:** `tools/lint.py` warns rather than errors, because the app package path is unaffected.
+The build guide prints the count against 30 and flags an over-long name in place.
+
+## Agent Builder has no import path, and no Actions
+
+Checked **2026-08-23**.
+
+Agent Builder is a form. There is no way to upload a `declarativeAgent.json` or an app package into
+it, though it can export one (**Download .zip file**, manifest and icon only, no embedded files).
+It also does not support Actions or API plugins: those need Copilot Studio.
+
+**Decision:** the renderer writes `rendered/<agent>/BUILD-GUIDE.md`, a paste-ready rendering of every
+Configure tab field in the order the form asks for them. This is the same honest seam as the plugin
+upload step: the tooling ends where the platform's API ends, and hands a human exactly what to do
+next rather than pretending. The guide is deliberately excluded from the app package zip.
+
 ## Upload is a portal or admin step
 
 There is no create API for a declarative agent app package: an app package is submitted to a

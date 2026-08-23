@@ -23,7 +23,7 @@ publisher:
   terms_url: https://github.com/libre-devops/copilot-agents/blob/main/LICENSE
 
 package:
-  version: 0.0.2
+  version: 0.0.3
   accent_color: "#15803D"
 
 # App ids are per publisher: two organisations must never share one. Anything not listed here is
