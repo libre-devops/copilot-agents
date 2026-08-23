@@ -95,6 +95,12 @@ platform with a different manifest) and of the `libredevops-dot-org` standards t
 - `assets/` holds the app icons, generated from source by `tools/make_icons.py`. CI fails if they
   drift, so change the generator rather than the PNGs.
 
+## Environment
+
+`uv` is the only prerequisite. `uv sync` builds `.venv` from `pyproject.toml` (`rust-just`, `pyyaml`,
+`jsonschema`, `ruff`); the scripts in `tools/` also carry PEP 723 headers so they run standalone.
+Keep the two dependency lists in step. There is no package to build: `[tool.uv] package = false`.
+
 ## Pipeline
 
 `just validate` is the full offline gate and exactly what CI runs: `render --check` (the drift

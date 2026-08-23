@@ -1,9 +1,19 @@
 # Contributing
 
+## Setting up
+
+```bash
+uv sync                  # .venv with just, pyyaml, jsonschema and ruff
+uv run just validate
+```
+
+[`uv`](https://docs.astral.sh/uv/) is the only prerequisite. The scripts in `tools/` also carry
+PEP 723 headers, so `uv run tools/render.py` works with no environment at all if you prefer.
+
 ## Before you open a pull request
 
 ```bash
-just validate
+uv run just validate
 ```
 
 That is the whole offline gate and exactly what CI runs: a fresh render checked against the

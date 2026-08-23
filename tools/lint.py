@@ -171,6 +171,17 @@ def lint_app_manifest(path: Path) -> None:
         if len(value) > limit:
             error(where, f"description.{field} is {len(value)} characters, the limit is {limit}")
 
+    # Publishing to an organisation's app catalog rejects a 0.x version with VersionHasMajorLessThan1:
+    # "App version shouldn't start with '0'." The Agent Builder path never sees this field, so it is a
+    # warning rather than an error. Checked 2026-08-23 against the Graph teamsApp publish reference.
+    version = str(app.get("version", ""))
+    if version.startswith("0"):
+        warn(
+            where,
+            f"app version {version!r} starts with 0. Publishing to an org app catalog rejects that "
+            "(VersionHasMajorLessThan1). Set package.version to 1.0.0 or higher in the profile.",
+        )
+
 
 def default_tokens() -> dict:
     """The default profile's token values, read without a YAML dependency."""
@@ -229,7 +240,9 @@ def main() -> int:
         return 2
 
     targets = [Path(a).resolve() for a in argv] or sorted(
-        p for p in root.iterdir() if p.is_dir() and (p / "declarativeAgent.json").is_file()
+        p
+        for p in root.iterdir()
+        if p.is_dir() and (p / "declarativeAgent.json").is_file()
     )
     if not targets:
         print("nothing to lint, run `just render` first", file=sys.stderr)
@@ -259,7 +272,10 @@ def main() -> int:
 
     checked = len(targets)
     if errors:
-        print(f"\n{len(errors)} error(s), {len(warnings)} warning(s) across {checked} agent(s).", file=sys.stderr)
+        print(
+            f"\n{len(errors)} error(s), {len(warnings)} warning(s) across {checked} agent(s).",
+            file=sys.stderr,
+        )
         return 1
     print(f"\n{checked} agent(s) clean, {len(warnings)} warning(s).")
     return 0

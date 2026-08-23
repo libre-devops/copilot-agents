@@ -23,7 +23,9 @@ publisher:
   terms_url: https://example.com/terms
 
 package:
-  version: 0.0.1
+  # The app manifest version, which is not the repository's git tag. Must be 1.0.0 or
+  # higher: publishing to an org app catalog rejects anything starting with 0.
+  version: 1.0.0
   accent_color: "#2563EB"
 
 # Leave app_ids empty to derive every id from the namespace below. Generate your own namespace with:

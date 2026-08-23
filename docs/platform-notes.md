@@ -54,6 +54,23 @@ and `.pdf`. The reference's own `EmbeddedKnowledge` example lists `file2.csv`.
 **Decision:** the renderer and linter enforce the documented allowlist, which is why the workflow
 definition schema ships as `workflowdefinition.schema.txt` rather than `.json`.
 
+## The app catalog rejects a version starting with 0
+
+Checked **2026-08-23** against the
+[teamsApp publish reference](https://learn.microsoft.com/en-us/graph/api/teamsapp-publish).
+
+Publishing an app package to an organisation's catalog validates the manifest and returns
+`VersionHasMajorLessThan1` for a 0.x version: "App version shouldn't start with '0'. For example,
+0.0.1 or 0.1 aren't valid app versions and 1.0 / 1.5.1 / 1.0.0 / 2.5.0 are valid app versions."
+
+Nothing else surfaces this. The schema accepts any semver string, and the Agent Builder path never
+reads the field at all, so a 0.x package looks perfectly healthy right up to the point an admin tries
+to publish it.
+
+**Decision:** profiles ship `package.version: 1.0.0`, and `tools/lint.py` warns on a leading zero.
+The app manifest version is deliberately independent of this repository's git tag: the repo can sit
+at v0.0.x while the packages it produces are 1.x.
+
 ## Agent Builder's Name field is tighter than the manifest's
 
 Checked **2026-08-23** against

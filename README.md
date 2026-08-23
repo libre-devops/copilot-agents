@@ -26,15 +26,48 @@ with two commands and without editing a fragment.
 
 ---
 
+## Prerequisites
+
+Just [`uv`](https://docs.astral.sh/uv/). It brings its own Python and the task runner, so there is
+nothing else to install and no global Python to pollute.
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh     # macOS and Linux
+winget install --id=astral-sh.uv                    # Windows
+```
+
 ## Quick start
 
 ```bash
 git clone https://github.com/libre-devops/copilot-agents.git
 cd copilot-agents
 
-just validate            # render, drift gate, and lint. Offline, no tenant, no cost.
-just package             # build dist/<agent>-<version>.zip, ready to upload
+uv sync                  # creates .venv with just, pyyaml, jsonschema and ruff
+uv run just validate     # render, drift gate, and lint. Offline, no tenant, no cost.
+uv run just package      # build dist/<agent>-<version>.zip, ready to upload
 ```
+
+Activate the environment if you would rather type `just` directly:
+
+```bash
+source .venv/bin/activate     # .venv\Scripts\activate on Windows
+just validate
+```
+
+### Running without syncing at all
+
+Every script in [`tools/`](./tools) carries a
+[PEP 723](https://peps.python.org/pep-0723/) inline metadata header, so `uv` resolves each one's
+dependencies on the fly. If you only want to build a package and never touch the repo again, you do
+not need `uv sync`, a virtual environment, or `just`:
+
+```bash
+uv run tools/render.py --package
+uv run tools/lint.py
+```
+
+`pyproject.toml` exists for the other case: working on the repo, where one environment holding the
+task runner and the linters is more convenient. Keep its versions in step with the PEP 723 headers.
 
 To put an agent into Copilot right now, open
 [`rendered/terraform-author/BUILD-GUIDE.md`](./rendered/terraform-author/BUILD-GUIDE.md) next to
@@ -245,6 +278,7 @@ needs a licence or metered usage enabled in the tenant.
 | [instruction-budget.md](./docs/instruction-budget.md) | the 8,000 character cap, why you cannot route around it, and how to spend it |
 | [authoring.md](./docs/authoring.md) | adding an agent, the fragment convention, choosing capabilities, testing |
 | [profiles.md](./docs/profiles.md) | publishing under your own brand, tokens, app id derivation, output routing |
+| [roadmap.md](./docs/roadmap.md) | what is planned, and what is blocked on the platform rather than on effort |
 | [knowledge.md](./docs/knowledge.md) | what grounds each agent, WebSearch and embedded file limits, tenant sources |
 | [platform-notes.md](./docs/platform-notes.md) | where the docs, the schema and reality disagree, with dates |
 
@@ -263,6 +297,25 @@ and the [published JSON schema](https://developer.microsoft.com/json-schemas/cop
 
 Where they disagree with each other, the discrepancy is recorded in
 [platform-notes.md](./docs/platform-notes.md) rather than papered over.
+
+## Roadmap
+
+More agents, since this is a collection rather than two topics. Real branding assets. A repeatable
+behaviour test pack, because the offline gates prove packaging and not behaviour.
+
+The question that comes up most is whether deployment can be automated with Terraform. **Not
+properly, and the blocker is authentication rather than tooling.** Microsoft Graph does have a
+publish API (`POST /appCatalogs/teamsApps`), but it supports **no application permissions at all**,
+only delegated ones, so there is no service principal and no federated CI identity. Separately,
+`msgraph_resource` serialises its `body` as JSON and the endpoint needs a raw `application/zip`, so
+the provider cannot express the call either way.
+
+Wrapping it in `local-exec` would be a shell script in a Terraform costume: no plan, no drift
+detection, and state that lies the moment an admin touches the portal. So the repository stops at a
+reproducible, drift gated, sha256 recorded artefact and leaves the upload to a human.
+
+The full reasoning, including what would change the answer, is in
+[docs/roadmap.md](./docs/roadmap.md).
 
 ## Privacy
 

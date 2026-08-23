@@ -23,7 +23,9 @@ publisher:
   terms_url: https://github.com/libre-devops/copilot-agents/blob/main/LICENSE
 
 package:
-  version: 0.0.3
+  # The app manifest version, which is not the repository's git tag. Must be 1.0.0 or
+  # higher: publishing to an org app catalog rejects anything starting with 0.
+  version: 1.0.0
   accent_color: "#15803D"
 
 # App ids are per publisher: two organisations must never share one. Anything not listed here is

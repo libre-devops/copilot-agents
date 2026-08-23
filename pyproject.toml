@@ -1,0 +1,49 @@
+# Development environment for copilot-agents.
+#
+# The repository ships no Python package: the three scripts in tools/ each carry a PEP 723 header,
+# so `uv run tools/render.py` resolves its own dependencies with no environment at all. This file
+# exists so that `uv sync` gives you one venv holding the task runner and the linters, which is
+# what you want when you are working on the repo rather than just building a package from it.
+#
+#   uv sync                  # create .venv with just, pyyaml and jsonschema
+#   uv run just validate     # or activate .venv and run `just validate` directly
+#
+# Keep the versions here in step with the PEP 723 headers in tools/*.py.
+
+[project]
+name = "copilot-agents"
+version = "0.0.4"
+description = "Microsoft 365 Copilot declarative agents as code, composed from reusable instruction fragments."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Craig Thacker", email = "craigthackerx@gmail.com" }]
+keywords = ["microsoft-365-copilot", "declarative-agents", "copilot-extensibility", "agents-as-code"]
+
+# The tools are scripts, not a library, so the project itself needs nothing at runtime.
+dependencies = []
+
+[project.urls]
+Homepage = "https://libredevops.org"
+Repository = "https://github.com/libre-devops/copilot-agents"
+Issues = "https://github.com/libre-devops/copilot-agents/issues"
+
+# PEP 735 dependency group, installed by `uv sync`.
+[dependency-groups]
+dev = [
+    "rust-just>=1.36",   # the `just` task runner, so no separate brew or cargo install
+    "pyyaml>=6",         # tools/render.py
+    "jsonschema>=4.21",  # tools/lint.py
+    "ruff>=0.6",         # lint and format the tools
+]
+
+# There is no package to build, so keep uv from trying.
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]

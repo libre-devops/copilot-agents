@@ -21,6 +21,12 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Sync the dev environment
+        run: uv sync --locked
+
+      - name: Lint the tools
+        run: uv run ruff check tools/
+
       # The drift gate. rendered/ is committed as the drop-in delivery path, so a change to a
       # fragment or an agent definition that was not re-rendered fails here rather than shipping
       # a manifest that does not match its source.

@@ -45,9 +45,8 @@ import uuid
 import zipfile
 from pathlib import Path
 
-import yaml
-
 import make_icons
+import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 AGENTS = ROOT / "agents"
@@ -141,7 +140,7 @@ def substitute(text: str, tokens: dict, where: str) -> str:
     """Replace every {{token}} from the profile, and refuse to let an unresolved one through."""
     missing: set[str] = set()
 
-    def replace(match: "re.Match[str]") -> str:
+    def replace(match: re.Match[str]) -> str:
         key = match.group(1)
         if key not in tokens:
             missing.add(key)
@@ -226,7 +225,10 @@ def build_capabilities(agent_id: str, spec: dict, embedded: bool) -> list[dict]:
         files = (spec.get("embedded_knowledge") or {}).get("files", [])
         if files:
             if "EmbeddedKnowledge" in seen:
-                fail(agent_id, "EmbeddedKnowledge is generated from embedded_knowledge, do not also declare it")
+                fail(
+                    agent_id,
+                    "EmbeddedKnowledge is generated from embedded_knowledge, do not also declare it",
+                )
             if len(files) > MAX_EMBEDDED_FILES:
                 fail(agent_id, f"{len(files)} embedded files, the limit is {MAX_EMBEDDED_FILES}")
             entries = []
@@ -239,7 +241,10 @@ def build_capabilities(agent_id: str, spec: dict, embedded: bool) -> list[dict]:
                     fail(agent_id, f"embedded source not found: {item['source']}")
                 size = source.stat().st_size
                 if size > MAX_EMBEDDED_BYTES:
-                    fail(agent_id, f"embedded file {target} is {size} bytes, the limit is {MAX_EMBEDDED_BYTES}")
+                    fail(
+                        agent_id,
+                        f"embedded file {target} is {size} bytes, the limit is {MAX_EMBEDDED_BYTES}",
+                    )
                 entries.append({"file": target})
             caps.append({"name": "EmbeddedKnowledge", "files": entries})
     return caps
@@ -322,7 +327,10 @@ def build_app_manifest(agent_id: str, spec: dict, profile: dict) -> dict:
     publisher = profile["publisher"]
     accent = profile["package"]["accent_color"]
     if not re.fullmatch(r"#[0-9a-fA-F]{6}", str(accent)):
-        fail(agent_id, f"profile {profile['id']}: package.accent_color must be #RRGGBB, got {accent!r}")
+        fail(
+            agent_id,
+            f"profile {profile['id']}: package.accent_color must be #RRGGBB, got {accent!r}",
+        )
 
     return {
         "$schema": APP_SCHEMA_URL,
@@ -361,9 +369,8 @@ def build_guide(agent_id: str, da: dict, app: dict, profile: dict) -> str:
         for site in cap.get("sites", [])
     ]
     mode = (da.get("behavior_overrides") or {}).get("default_response_mode", "Auto")
-    only_specified = (
-        (da.get("behavior_overrides") or {}).get("special_instructions", {}).get("discourage_model_knowledge", False)
-    )
+    special = (da.get("behavior_overrides") or {}).get("special_instructions", {})
+    only_specified = special.get("discourage_model_knowledge", False)
     warn = ""
     if len(name) > MAX_BUILDER_NAME:
         warn = (
@@ -377,9 +384,9 @@ def build_guide(agent_id: str, da: dict, app: dict, profile: dict) -> str:
         "",
         "**Generated. Do not edit.** Re-run `just render` after any change.",
         "",
-        f"Paste these values into Agent Builder at <https://m365.cloud.microsoft/agents/new>, on the",
-        f"**Configure** tab (choose **Skip to configure** on the New agent screen). Agent Builder has",
-        f"no import path, so this file is the bridge between the version controlled definition and the",
+        "Paste these values into Agent Builder at <https://m365.cloud.microsoft/agents/new>, on the",
+        "**Configure** tab (choose **Skip to configure** on the New agent screen). Agent Builder has",
+        "no import path, so this file is the bridge between the version controlled definition and the",
         f"form. Profile: `{profile['id']}`.",
         "",
         "---",
@@ -436,7 +443,7 @@ def build_guide(agent_id: str, da: dict, app: dict, profile: dict) -> str:
         "Leave **Create documents, charts, and code** (code interpreter) and **Create images**",
         "(image generator) **off**. Neither agent needs them.",
         "",
-        f"## 6. Model",
+        "## 6. Model",
         "",
         f"Set the default response mode to **{mode}**.",
         "",
@@ -478,7 +485,7 @@ def build_guide(agent_id: str, da: dict, app: dict, profile: dict) -> str:
         "",
         "## 10. Icon",
         "",
-        f"Upload `color.png` from this directory. It is 192x192 PNG, under the 1 MB limit, in the",
+        "Upload `color.png` from this directory. It is 192x192 PNG, under the 1 MB limit, in the",
         f"profile's accent colour ({profile['package']['accent_color']}).",
         "",
         "## 11. Test, then create and share",
@@ -660,7 +667,11 @@ def main() -> int:
             for agent_id in selected:
                 fresh_dir, check_dir = dest_root / agent_id, live_root / agent_id
                 fresh = {p.name: p.read_bytes() for p in fresh_dir.glob("*") if p.is_file()}
-                live = {p.name: p.read_bytes() for p in check_dir.glob("*") if p.is_file()} if check_dir.is_dir() else {}
+                live = (
+                    {p.name: p.read_bytes() for p in check_dir.glob("*") if p.is_file()}
+                    if check_dir.is_dir()
+                    else {}
+                )
                 for name in sorted(set(fresh) | set(live)):
                     if name not in live:
                         drifted.append(f"rendered/{agent_id}/{name} (missing)")
