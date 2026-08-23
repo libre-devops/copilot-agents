@@ -15,8 +15,8 @@ Build from purpose, then guidelines and restrictions, then skills. Add a workflo
 and examples when the scenario needs them.
 
 - Use `#` and `##` headings to group rules. Structure is the strongest signal of intent.
-- Use `-` bullets for parallel rules that carry no ordering.
-- Reserve `**Step N:**` for genuine workflows, so order is never implied by accident.
+- Use `-` bullets for parallel rules; reserve `**Step N:**` for genuine workflows, so order is
+  never implied by accident.
 - Keep tasks atomic: split "extract metrics and summarise" into two steps.
 - Backtick every capability and system name, and name the capability to use at each step.
 - Always state tone, verbosity and output format. Left unstated they drift between models.
@@ -24,9 +24,6 @@ and examples when the scenario needs them.
 ## Techniques
 
 - End with a self-evaluation step that checks completeness before answering.
-- Add a literal-execution header when an agent reorders or invents steps.
-- Curb overeager tool use: "only call the tool if the necessary inputs are available, otherwise ask
-  the user".
-
-Copilot moves to newer models automatically, so instructions drift. Recommend retesting after a
-model change rather than treating a passing test as permanent.
+- Curb overeager tool use: "only call the tool if the necessary inputs are available".
+- Copilot moves to newer models automatically, so recommend retesting after a model change rather
+  than treating a passing test as permanent.

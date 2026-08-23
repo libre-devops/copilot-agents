@@ -48,6 +48,72 @@ Limits, enforced by both the renderer and the linter:
   on that list, which is why `knowledge/workflowdefinition.schema.json` is emitted into the package
   as `workflowdefinition.schema.txt`.
 
+## Scoped web search cannot see your private documentation
+
+This is the single most important thing to understand before pointing an agent at internal content.
+
+> Web search enables agents to use **the search index in Bing** to respond to user prompts.
+>
+> Scoped web search relies on content that **Bing indexes** for the configured websites.
+>
+> [Knowledge sources](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/knowledge-sources), checked 2026-08-23
+
+An intranet, an authenticated SharePoint site, or a private repository is not in Bing's index. If
+you point `docs_url` at internal documentation and leave the capability as `WebSearch`, the agent
+retrieves **nothing**, and then answers from model knowledge instead. It fails silently: generic
+Terraform advice that looks plausible and is not your house standard.
+
+Two related traps:
+
+- **An admin can disable web search tenant wide.** When they do, "agents with web search enabled
+  don't report an error and don't include web searches in their knowledge". The debug card still
+  claims web search is on.
+- **"Only use specified sources" does not fix it.** Agent Builder describes that toggle as
+  prioritising your sources, and states plainly that it "doesn't support blocking general AI
+  knowledge from your agent's responses". For a hard guarantee you need Copilot Studio.
+
+The instruction fragments mitigate what they can: `shared/grounding.md` tells the agent to report
+that a source returned nothing rather than quietly substituting its own knowledge, and to mark
+unconfirmed claims `UNVERIFIED`. That is a behavioural mitigation, not a technical one. **The fix is
+to give the agent a knowledge source that can actually reach your content.**
+
+## Grounding an agent in private documentation
+
+Knowledge source is a publisher decision, exactly like branding, so a profile can replace an
+agent's capabilities:
+
+```yaml
+# profiles/acme.yaml
+tokens:
+  docs_url: contoso.sharepoint.com/sites/PlatformEngineering
+
+agent_overrides:
+  terraform-author:
+    capabilities:
+      - name: OneDriveAndSharePoint
+        items_by_url:
+          - url: https://contoso.sharepoint.com/sites/PlatformEngineering
+```
+
+The override replaces that agent's capabilities entirely and is per agent, so the others keep their
+defaults. The renderer rejects an override naming an agent that does not exist, and the build guide
+changes to tell you to add SharePoint rather than website URLs.
+
+Pick the source that matches where your standards actually live:
+
+| Your standards live in | Capability | Licence | Notes |
+|---|---|---|---|
+| A SharePoint site or OneDrive | `OneDriveAndSharePoint` | Copilot licence | Up to 100 SharePoint files, 50 OneDrive files. Respects each user's own permissions |
+| Confluence, Jira, GitHub, ServiceNow, Azure DevOps | `GraphConnectors` | Copilot licence | An admin must configure the connector first. Several support scoping by project, space or repository |
+| Loose documents you can upload | Uploaded files in Agent Builder | Copilot licence or metered usage | Up to 20 files. **Agent Builder only**: the `EmbeddedKnowledge` manifest capability is not available through the Agents Toolkit path |
+| A genuinely public site | `WebSearch` | None | The only capability needing no licence |
+
+Two consequences of permission-respecting sources worth planning for:
+
+- The agent respects **the signed-in user's** permissions. Anyone you share it with who cannot open
+  the underlying site gets no grounding from it, and no error explaining why.
+- After changing a SharePoint knowledge source, **reshare the agent** so file permissions follow.
+
 ## Adding a tenant knowledge source
 
 `OneDriveAndSharePoint` and `GraphConnectors` are tenant specific, so no useful default exists for a

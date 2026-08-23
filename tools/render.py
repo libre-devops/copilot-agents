@@ -132,6 +132,14 @@ def load_profile(name: str) -> dict:
     except (ValueError, AttributeError, TypeError):
         raise RenderError(f"profile {name!r}: app_id_namespace must be a GUID") from None
     profile.setdefault("app_ids", {})
+    profile.setdefault("agent_overrides", {})
+    known = {p.name for p in AGENTS.iterdir() if (p / "agent.yaml").is_file()}
+    for agent_id in profile["agent_overrides"]:
+        if agent_id not in known:
+            raise RenderError(
+                f"profile {name!r}: agent_overrides names {agent_id!r}, which is not an agent. "
+                f"Known agents: {', '.join(sorted(known))}"
+            )
     profile["id"] = name
     return profile
 
@@ -197,8 +205,13 @@ def check_dashes(agent_id: str, instructions: str) -> None:
             fail(agent_id, f"{label} found in composed instructions at line {line}")
 
 
-def build_capabilities(agent_id: str, spec: dict, embedded: bool) -> list[dict]:
-    caps = [dict(c) for c in spec.get("capabilities", [])]
+def build_capabilities(agent_id: str, spec: dict, embedded: bool, profile: dict) -> list[dict]:
+    # A profile may replace an agent's capabilities wholesale. Scoped WebSearch reaches only what
+    # Bing indexes, so an organisation grounding an agent in private documentation has to swap it
+    # for OneDriveAndSharePoint or GraphConnectors. That is a publisher decision, not an agent one.
+    override = (profile.get("agent_overrides") or {}).get(agent_id, {})
+    source = override if "capabilities" in override else spec
+    caps = [dict(c) for c in source.get("capabilities", [])]
     seen: set[str] = set()
     for cap in caps:
         name = cap.get("name")
@@ -250,7 +263,9 @@ def build_capabilities(agent_id: str, spec: dict, embedded: bool) -> list[dict]:
     return caps
 
 
-def build_declarative_agent(agent_id: str, spec: dict, instructions: str, embedded: bool) -> dict:
+def build_declarative_agent(
+    agent_id: str, spec: dict, instructions: str, embedded: bool, profile: dict
+) -> dict:
     name = spec["name"]
     description = " ".join(spec["description"].split())
 
@@ -274,7 +289,7 @@ def build_declarative_agent(agent_id: str, spec: dict, instructions: str, embedd
         "instructions": instructions,
     }
 
-    caps = build_capabilities(agent_id, spec, embedded)
+    caps = build_capabilities(agent_id, spec, embedded, profile)
     if caps:
         manifest["capabilities"] = caps
 
@@ -429,12 +444,46 @@ def build_guide(agent_id: str, da: dict, app: dict, profile: dict) -> str:
             "",
             "Leave **Search all websites** off. These agents are scoped on purpose.",
             "",
+            "> Scoped web search reads **only what Bing indexes** for those sites. It cannot reach an",
+            "> intranet, an authenticated site, or a private repository. If your standards are not",
+            "> publicly indexed, this agent will find nothing and answer from model knowledge instead.",
+            "> Swap the capability in your profile: see `docs/knowledge.md`.",
+            "",
         ]
-    else:
-        lines += ["This agent declares no web knowledge. Leave the Knowledge section empty.", ""]
+
+    for cap in da.get("capabilities", []):
+        name_ = cap.get("name")
+        if name_ == "OneDriveAndSharePoint":
+            urls = [i.get("url") for i in cap.get("items_by_url", []) if i.get("url")]
+            lines += ["Add these SharePoint or OneDrive sources with **Enter URL** or **Browse**:", ""]
+            lines += [f"- `{u}`" for u in urls] or ["- (scoped by SharePoint id, use **Browse**)"]
+            lines += [
+                "",
+                "> SharePoint knowledge needs a Microsoft 365 Copilot licence, and the agent respects",
+                "> each user's own permissions: anyone you share with who cannot open the source gets",
+                "> no grounding from it. Reshare the agent after changing this so file permissions",
+                "> follow.",
+                "",
+            ]
+        elif name_ == "GraphConnectors":
+            ids = [c.get("connection_id") for c in cap.get("connections", [])]
+            lines += ["Under **Choose other data sources**, add these Copilot connectors:", ""]
+            lines += [f"- `{c}`" for c in ids] or ["- (all connectors enabled in the tenant)"]
+            lines += ["", "> Copilot connectors need a licence and must be enabled by an admin first.", ""]
+        elif name_ == "EmbeddedKnowledge":
+            files_ = [f.get("file") for f in cap.get("files", [])]
+            lines += ["Upload these files from this directory in the **Knowledge** section:", ""]
+            lines += [f"- `{f}`" for f in files_]
+            lines += ["", "> Uploaded knowledge needs a licence or metered usage.", ""]
+
+    if not sites and not any(
+        c.get("name") in ("OneDriveAndSharePoint", "GraphConnectors", "EmbeddedKnowledge")
+        for c in da.get("capabilities", [])
+    ):
+        lines += ["This agent declares no knowledge sources. Leave the Knowledge section empty.", ""]
 
     lines += [
-        "Leave every **Work content** toggle (Cloud files, Outlook, Teams, People) **off** unless you",
+        "Leave every other **Work content** toggle (Outlook, Teams, People) **off** unless you",
         "deliberately want tenant grounding. Those need a Microsoft 365 Copilot licence, and an",
         "unscoped source grants far more than most people expect.",
         "",
@@ -531,7 +580,7 @@ def render_one(agent_id: str, profile: dict, embedded: bool, dest_root: Path) ->
     instructions = compose_instructions(agent_id, spec.get("instructions", []), profile["tokens"])
     check_dashes(agent_id, instructions)
 
-    da = build_declarative_agent(agent_id, spec, instructions, embedded)
+    da = build_declarative_agent(agent_id, spec, instructions, embedded, profile)
     app = build_app_manifest(agent_id, spec, profile)
 
     # Wipe first. `--check` promises that rendered/ equals a fresh render, which is only true if

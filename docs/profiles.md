@@ -82,6 +82,29 @@ name: "{{brand_short}} Terraform Author"    # quoted, because it starts with a b
 short_description: Writes Terraform to the {{brand_name}} standard.   # fine unquoted
 ```
 
+## Overriding capabilities
+
+Branding is not the only publisher-specific thing. **Knowledge source is too.** A public agent uses
+scoped `WebSearch`, which reads only what Bing indexes, so an organisation grounding the same agent
+in internal documentation has to swap the capability:
+
+```yaml
+agent_overrides:
+  terraform-author:
+    capabilities:
+      - name: OneDriveAndSharePoint
+        items_by_url:
+          - url: https://contoso.sharepoint.com/sites/PlatformEngineering
+```
+
+This replaces that agent's capabilities entirely, and only that agent's. A profile naming an agent
+that does not exist is rejected, so a rename upstream cannot leave your override silently doing
+nothing. The generated build guide follows the override, telling you to add SharePoint sources
+rather than website URLs.
+
+The instruction fragments deliberately never name a specific capability, so swapping the source does
+not invalidate them. See [knowledge.md](knowledge.md) for choosing the right one.
+
 ## App ids
 
 Two publishers must never share an app id, and an id must stay stable across renders or every

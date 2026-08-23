@@ -3,23 +3,23 @@
   "profile": "default",
   "agents": {
     "agent-author": {
-      "declarativeAgent.json": "070ebcc49f3da164e994f3c6bde2e817f3a6146258437b099fac0b3c7f8a8ecc",
+      "declarativeAgent.json": "10dec5c00de7e90f3b9e1ab9c11c541e4ff0c365d90b8287326f7361e43ca2d1",
       "manifest.json": "517bbba841d7f015ebefab663f6215a4b33c2f4018afbd994c39627eed80c13d",
-      "BUILD-GUIDE.md": "3f95a2852f0e1fd65f23281bf1707371c940d5e587856771b76858bf922410bf",
+      "BUILD-GUIDE.md": "0276450fd407faf380a766a050c441425bc5c2c62caa0a31c99544b7f2f6f6f7",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672"
     },
     "logic-app-author": {
-      "declarativeAgent.json": "10a4a350556eeed57ee6ad85d0fce4af90c664981d1ac629d4baad6b2567e07d",
+      "declarativeAgent.json": "96a1843d0958774d6e6c83c6161932a7539ecf93e84bc4ca0f2266d33d763440",
       "manifest.json": "b16f8eb2b49d85c67fa5419267837c90c93fac1caa3eff64de9e9fc470228e31",
-      "BUILD-GUIDE.md": "2957a483da0cebf13dc14076d094d2af88ddfe21a50a5f92d26df839fb19fb39",
+      "BUILD-GUIDE.md": "5983c9260c85f3b00af72e55f07c363acbe01ebad945216a59d474c250a2980f",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672"
     },
     "terraform-author": {
-      "declarativeAgent.json": "721cd4f491f0f2839980ec5c4211e2a21e6566657c244cb4a37dc797079fd018",
+      "declarativeAgent.json": "8b5aa209e95214a0b2997ce61f64a8108b53988bc2832d7be53cd9c28b1c2585",
       "manifest.json": "b1c50cd0f65a635b4a3545c8b63f14f8ea59126d203d2df1222f88d6b97efcfe",
-      "BUILD-GUIDE.md": "1ec328f44f5bc098633436b786f9697dbb485535d7d7fba29ad594a94c37837b",
+      "BUILD-GUIDE.md": "8e80577d261bcd8b379a9615ad4af8823b1c341c865008394300f42b4cddce2d",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672"
     }
