@@ -66,6 +66,12 @@ new-profile name:
 new-profile-quick name:
     uv run tools/new_profile.py {{name}} --defaults
 
+# Rebrand the whole repository for a fork: README, docs, licence, default profile, agent READMEs.
+# Meant for just after you fork. Do NOT run it once agents from this checkout are installed: it
+# issues a new app id namespace and changes agent names, and installed agents do not follow.
+rebrand *args:
+    uv run tools/rebrand.py {{args}}
+
 # Refresh the knowledge packs agents upload into Agent Builder, from knowledge/sources.yaml.
 update-knowledge:
     uv run tools/fetch_knowledge.py

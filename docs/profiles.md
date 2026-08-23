@@ -7,6 +7,17 @@ That split is what lets you take this repository, point it at your own organisat
 same three agents under your own name without editing a single fragment, and without your
 organisation's details ever appearing in a public commit.
 
+## Two kinds of rebranding
+
+| You want | Command | What changes |
+|---|---|---|
+| The **agents** to carry your brand | `just new-profile <name>` | a profile file, gitignored. Upstream stays intact and `git pull` keeps working |
+| The **repository** to be yours | `just rebrand` | README, docs, licence, default profile, agent READMEs. A one-off for a fork |
+
+Most people want the first. Use `rebrand` only if you are forking and the Libre DevOps name should
+not appear anywhere. It issues a new app id namespace, so run it before anyone builds agents from
+your fork: installed agents do not follow an id change.
+
 ## Publishing under your own brand
 
 ```bash

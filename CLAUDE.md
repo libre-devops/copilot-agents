@@ -69,6 +69,15 @@ platform with a different manifest) and of the `libredevops-dot-org` standards t
   customer profile, and never commit one. Only `default.yaml` and `example.yaml` are tracked.
 - Keep `example.yaml` generic. It is a public file.
 
+### Two rebranding paths, do not confuse them
+
+- `just new-profile` brands the **agents** through a gitignored profile. This is the normal path and
+  it leaves upstream intact.
+- `just rebrand` rewrites the **repository** for a fork, including a new app id namespace. It is a
+  one-off, it refuses a dirty tree, it excludes `knowledge/*.txt` (other people's documents) and
+  `tools/rebrand.py` (its own search strings), and all replacements happen in a single regex pass so
+  a supplied value is never rewritten again.
+
 ### Agent content rules (conditions of entry to `agents/`)
 
 - Every factual claim cites its tool, page or document.

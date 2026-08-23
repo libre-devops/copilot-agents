@@ -280,6 +280,32 @@ Every render prints the spend, so the budget stays visible:
 
 Full reasoning in [docs/instruction-budget.md](./docs/instruction-budget.md).
 
+## Forking it entirely
+
+`new-profile` brands the **agents**. If you are forking the repository itself and want the README,
+the docs, the licence and the default profile to be yours too:
+
+```bash
+uv run just rebrand
+```
+
+It asks for your organisation name, GitHub org, domain, prefix and copyright holder, previews every
+replacement with a per-file count, and only writes once you confirm. All replacements happen in a
+single pass, so a value you supply is never itself rewritten (replacing `Libre DevOps` with
+`Waldo Corp` and then replacing `ldo` would otherwise produce `Wacm Corp`).
+
+It also issues a **new app id namespace** and clears the pinned ids, so your fork cannot claim the
+same agent identities as upstream.
+
+> **Run it just after forking, not later.** Changing the namespace changes every agent id, and the
+> agent names change too. Agents already installed from this checkout do not follow: they would have
+> to be rebuilt and reshared. The tool refuses to run on a dirty working tree so the rewrite stays
+> reviewable and `git checkout .` undoes it.
+
+Two things it deliberately does not touch: `knowledge/*.txt`, because those are other people's
+published documents and rewriting their text would falsify them, and its own source, because its
+search strings are the very words it is replacing.
+
 ## Repository layout
 
 | Path | What it holds |
