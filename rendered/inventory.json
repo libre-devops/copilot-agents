@@ -20,9 +20,9 @@
       "knowledge/logic-app-workflow-definition-schema.txt": "7b2d3f9a909066d6c0dfc224cb78cabc1b4e3686d4bc89ab29a5aea8633747ae"
     },
     "terraform-author": {
-      "declarativeAgent.json": "714acf68506a1a4dbbe74a880f8de4b54a20977cf2ea44a4287d46e8654d6a2d",
+      "declarativeAgent.json": "2f287fc775e5e15bfbd28da01d7594f030267599616a6b9f9b9d3d3f32d99ea5",
       "manifest.json": "b1c50cd0f65a635b4a3545c8b63f14f8ea59126d203d2df1222f88d6b97efcfe",
-      "BUILD-GUIDE.md": "3338002199581777f78826ce2ee129794334a0f9ccc54ddd67d843c2fda89a18",
+      "BUILD-GUIDE.md": "cc49a44fdc9c810163962e38ddc4492bcd5401845f26fd7ad5a3d412caca7dfb",
       "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
       "knowledge/terraform-standards.txt": "8ea70123d3c0e8d1a725a0a2853deb1fb3e4b09c3445b6af4ec41e5384cf2055",

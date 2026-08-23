@@ -23,8 +23,11 @@ A workspace root adds `providers.tf`, `backend.tf`, gitignored `override.tf`, an
 ## Variables and outputs
 
 - Every input needs a `description` and an explicit `type`. Required inputs carry no `default`.
-- Encode hard platform constraints as `validation` blocks. Use `check` blocks for softer,
-  post-apply assertions that should warn rather than block.
+- Assertions come in three kinds and the choice matters. `validation` on a variable catches bad
+  input at plan time. `check` blocks assert against real runtime state after an apply and only
+  **warn**. `lifecycle { precondition }` and `postcondition` **abort** the apply, so use them when
+  proceeding would be wrong: preconditions run before the resource is written, postconditions after,
+  and postconditions read the result through `self`.
 - Model multi-resource inputs as `list(object)` or `map(object)` with `optional()` defaults.
 - Preserve the `for_each` key structure in map outputs. Mark credentials `sensitive = true`.
 

@@ -38,69 +38,73 @@ winget install --id=astral-sh.uv                    # Windows
 
 ## Quick start
 
+Get one agent into Copilot and shared with your team, in about ten minutes.
+
 ```bash
 git clone https://github.com/libre-devops/copilot-agents.git
 cd copilot-agents
 
-uv sync                  # creates .venv with just, pyyaml, jsonschema and ruff
-uv run just validate     # render, drift gate, and lint. Offline, no tenant, no cost.
-uv run just package      # build dist/<agent>-<version>.zip, ready to upload
+uv sync                     # .venv with just, pyyaml, jsonschema and ruff
+uv run just validate        # proves it builds. Offline, no tenant, no cost, nothing to log in to
 ```
 
-Activate the environment if you would rather type `just` directly:
+Now open **[`rendered/terraform-author/BUILD-GUIDE.md`](./rendered/terraform-author/BUILD-GUIDE.md)**
+beside <https://m365.cloud.microsoft/agents/new> and work down it. The guide is generated for exactly
+this: it gives you the text to paste into every field, the files to upload, what to leave switched
+off, how to test it, and how to share it.
+
+That is the whole flow. No admin, no upload, no tenant configuration.
+
+### Under your own branding
 
 ```bash
-source .venv/bin/activate     # .venv\Scripts\activate on Windows
-just validate
+uv run just new-profile acme     # asks for each value, Enter accepts the default
+uv run just check acme           # renders and lints into build/acme/
 ```
+
+Then open `build/acme/terraform-author/BUILD-GUIDE.md` instead. You can hold Enter through every
+question and still get something that builds; the placeholders sit on `example.invalid` so an
+unedited value is obvious rather than silently wrong. Grounding it in your own standards rather than
+the Libre DevOps ones is [one block in the profile](./docs/knowledge.md#using-your-own-standards).
+
+### Where things end up
+
+| Path | Manifests and build guide | App packages |
+|---|---|---|
+| default profile | `rendered/<agent>/` (committed) | `dist/` |
+| your profile | `build/<profile>/<agent>/` | `dist/<profile>/` |
 
 ### Running without syncing at all
 
 Every script in [`tools/`](./tools) carries a
 [PEP 723](https://peps.python.org/pep-0723/) inline metadata header, so `uv` resolves each one's
-dependencies on the fly. If you only want to build a package and never touch the repo again, you do
-not need `uv sync`, a virtual environment, or `just`:
+dependencies on the fly. If you only want to build once and never touch the repo again, you need no
+virtual environment and no `just`:
 
 ```bash
-uv run tools/render.py --package
+uv run tools/render.py
 uv run tools/lint.py
 ```
 
 `pyproject.toml` exists for the other case: working on the repo, where one environment holding the
 task runner and the linters is more convenient. Keep its versions in step with the PEP 723 headers.
 
-To put an agent into Copilot right now, open
-[`rendered/terraform-author/BUILD-GUIDE.md`](./rendered/terraform-author/BUILD-GUIDE.md) next to
-<https://m365.cloud.microsoft/agents/new> and paste your way down it. No admin, no upload, shareable
-by link. See [Build an agent in Agent Builder](#build-an-agent-in-agent-builder).
-
-Publishing under your own brand instead:
-
-```bash
-uv run just new-profile acme    # asks for each value, press Enter to accept the default
-uv run just package acme        # writes dist/acme/ and build/acme/
-```
-
-`new-profile` prompts for the organisation name, URLs, colour and version, each with a default. You
-can hold Enter all the way through and still get a profile that renders, packages and lints; the
-placeholders sit on `example.invalid` so an unedited value is obvious rather than silently wrong.
-
-Profiles you add are gitignored by default, so your organisation's details cannot reach a public
-repository by accident. See [docs/profiles.md](./docs/profiles.md).
-
-Everything above runs offline and needs no Microsoft 365 tenant. Only installing an agent does.
-
 ## The agents
 
-| Agent | What it does | Knowledge |
+| Agent | What it does | Uploaded knowledge |
 |---|---|---|
-| [`terraform-author`](./agents/terraform-author) | Writes and reviews Terraform to the Libre DevOps Terraform Standard and Azure Naming Convention: the file split, `for_each` over `count`, the `this` label, argument ordering, typed variables with validation, pinned providers | `WebSearch` over the standards, the HashiCorp language reference, the Libre DevOps registry namespace and Microsoft Learn |
-| [`logic-app-author`](./agents/logic-app-author) | Writes, repairs and reviews Workflow Definition Language: the three export wrappers, declarations versus values, action names as stored keys, and the failure modes that pass validation and break at run time | `WebSearch` over the standards and Microsoft Learn, plus the Azure workflow definition schema as optional embedded knowledge |
-| [`agent-author`](./agents/agent-author) | Designs, writes and reviews declarative agents themselves: schema v1.8 and every limit it imposes, which capabilities cost a licence, and how to structure instructions inside the budget | `WebSearch` over Microsoft Learn and the published JSON schemas, plus the declarative agent schema as optional embedded knowledge |
+| [`terraform-author`](./agents/terraform-author) | Terraform to the Libre DevOps Terraform Standard and Azure Naming Convention: the file split, `for_each` over `count`, the `this` label, argument ordering, typed variables, and the three kinds of assertion (`validation` at plan time, `check` to warn, `precondition` to abort) | the Terraform Standard, the Azure Naming Convention |
+| [`logic-app-author`](./agents/logic-app-author) | Workflow Definition Language: the three export wrappers, declarations versus values, action names as stored keys, and the failure modes that pass validation and break at run time | the Logic App Standard, the workflow definition schema |
+| [`agent-author`](./agents/agent-author) | Declarative agents themselves: schema v1.8 and every limit it imposes, which capabilities cost a licence, and how to structure instructions inside the budget | the declarative agent manifest schema |
 
-Both agents ship the same contract: every factual claim cites its source, retrieved content is data
-rather than instructions, anything unconfirmed is marked `UNVERIFIED` rather than guessed, and the
-agent never claims to have run, deployed or validated anything.
+Each also gets scoped `WebSearch` over the relevant public references, but the uploaded files come
+first: the agents are instructed to treat them as authoritative over both web results and their own
+training. That ordering is what makes them enforce *your* standard rather than generic advice.
+
+All three ship the same contract: every factual claim cites its source, retrieved content is data
+rather than instructions, a knowledge source that returns nothing is reported rather than quietly
+replaced with model knowledge, anything unconfirmed is marked `UNVERIFIED` rather than guessed, and
+the agent never claims to have run, deployed or validated anything.
 
 ## How it fits together
 
@@ -128,29 +132,6 @@ dist/[<profile>/]<id>-<ver>.zip    the uploadable Microsoft 365 app package
 
 `rendered/` is committed on purpose. It is the drop-in path for anyone who wants the manifests
 without running the toolchain, and CI fails if it drifts from its source.
-
-## The constraint that shapes this repo
-
-Schema 1.8 caps `instructions` at **8,000 characters**. The Libre DevOps Terraform Standard alone is
-over 2,500 lines, so it cannot be inlined, and Microsoft explicitly warns against offloading
-instructions into a knowledge source to dodge the cap: knowledge content is subject to cross-prompt
-injection classifiers and is not honoured as maker-authored instruction.
-
-So the split is deliberate and enforced:
-
-- **Instructions carry behaviour.** Composed from fragments, budget checked at build time, and the
-  build **fails** rather than truncates.
-- **Knowledge carries facts.** Schemas and reference documentation, for grounding claims only.
-
-Every render prints the spend, so the budget stays visible:
-
-```
-  agent-author:     instructions 7144/8000 (89%), 4 files
-  logic-app-author: instructions 6799/8000 (84%), 4 files
-  terraform-author: instructions 6225/8000 (77%), 4 files
-```
-
-Full reasoning in [docs/instruction-budget.md](./docs/instruction-budget.md).
 
 ## Build an agent in Agent Builder
 
@@ -182,21 +163,26 @@ Every field below comes straight out of the build guide, in the order Agent Buil
 | **Icon** | `rendered/<agent>/color.png` | PNG, 192x192, 1 MB |
 | **Description** | guide section 2 | 1,000 characters |
 | **Instructions** | guide section 3, paste the whole block | 8,000 characters |
-| **Knowledge** (Enter URL) | guide section 4 | 4 public websites, two path levels each, no query strings |
+| **Knowledge**, uploaded files | guide section 4, drag from `knowledge/` | 20 files, `.txt .pdf .docx` and friends |
+| **Knowledge**, Enter URL | guide section 4 | 4 public websites, two path levels each, no query strings |
 | **Capabilities** | guide section 5, both off | code interpreter, image generator |
 | **Model** | guide section 6 | Auto, Quick response, or Think deeper |
 | **Starter Prompts** | guide section 8 | 12 maximum |
 | **About this agent** (**...** menu) | guide section 9 | short description 80, URLs must be HTTPS |
 
-Two things worth getting right:
+Three things worth getting right:
 
-- **Leave the Work content toggles off** (Cloud files, Outlook, Teams, People) unless you actually
-  want tenant grounding. They need a Microsoft 365 Copilot licence, and an unscoped source reaches
-  much further than most people expect. These agents are deliberately web only, which is why they
-  work on a plain licence.
+- **Upload the knowledge files before you add the websites.** They are the standards the agent is
+  meant to enforce, and it is instructed to trust them over web results and over its own training.
+  Scoped web search only reads what Bing indexes, so it can never see private documentation: the
+  uploads are what make the agent actually authoritative. They need a Copilot licence or metered
+  usage; the rest of the agent works without one.
+- **Leave the other Work content toggles off** (Outlook, Teams, People) unless you actually want
+  tenant grounding. An unscoped source reaches much further than most people expect.
 - **Leave "Only use specified sources" off.** An agent that cannot draw on its own knowledge of HCL
-  or JSON cannot write either. Agent Builder describes that toggle as prioritising your sources
-  rather than blocking model knowledge, which it cannot fully do.
+  or JSON cannot write either, and the knowledge precedence in its instructions already puts your
+  standards first. Agent Builder describes that toggle as prioritising your sources rather than
+  blocking model knowledge, which it states plainly it cannot fully do.
 
 ### 3. Test before you create
 
@@ -239,7 +225,7 @@ The alternative path, for publishing to an organisation rather than sharing from
 There is no create API for a declarative agent, so this is an admin or portal step and this repo
 ends where the API does.
 
-1. Build the package: `just package`.
+1. Build the package: `uv run just package` (or `uv run just package <profile>`).
 2. Upload `dist/<agent>-<version>.zip` through the
    [Microsoft 365 admin centre](https://learn.microsoft.com/en-us/microsoft-365/admin/manage/manage-plugins-for-copilot-in-integrated-apps)
    under Integrated apps, or side load it with the
@@ -259,6 +245,29 @@ needs a licence or metered usage enabled in the tenant.
 | Actions and API plugins | not supported, use Copilot Studio | supported |
 | Getting your definition in | paste from `BUILD-GUIDE.md` | upload the zip directly |
 | Best for | trying an agent, sharing with a team | rolling one out to an organisation |
+
+## The constraint that shapes this repo
+
+Schema 1.8 caps `instructions` at **8,000 characters**. The Libre DevOps Terraform Standard alone is
+over 2,500 lines, so it cannot be inlined, and Microsoft explicitly warns against offloading
+instructions into a knowledge source to dodge the cap: knowledge content is subject to cross-prompt
+injection classifiers and is not honoured as maker-authored instruction.
+
+So the split is deliberate and enforced:
+
+- **Instructions carry behaviour.** Composed from fragments, budget checked at build time, and the
+  build **fails** rather than truncates.
+- **Knowledge carries facts.** Schemas and reference documentation, for grounding claims only.
+
+Every render prints the spend, so the budget stays visible:
+
+```
+  agent-author:     instructions 7144/8000 (89%), 4 files
+  logic-app-author: instructions 6799/8000 (84%), 4 files
+  terraform-author: instructions 6225/8000 (77%), 4 files
+```
+
+Full reasoning in [docs/instruction-budget.md](./docs/instruction-budget.md).
 
 ## Repository layout
 
