@@ -21,7 +21,7 @@ default:
 # you name one, render, lint, then the exact paths and the URL to open.
 #
 #   just quickstart          # the Libre DevOps agents
-#   just quickstart cdsr     # your own branding, asking for your standards on the way through
+#   just quickstart acme     # your own branding, asking for your standards on the way through
 quickstart profile="default":
     uv run tools/quickstart.py {{profile}}
 

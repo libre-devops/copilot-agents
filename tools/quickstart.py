@@ -11,7 +11,7 @@ implementation of each thing and this only sequences them.
 
 Usage:
     uv run tools/quickstart.py              # the Libre DevOps agents, into rendered/
-    uv run tools/quickstart.py cdsr         # your own branding, into build/cdsr/
+    uv run tools/quickstart.py acme         # your own branding, into build/acme/
 """
 from __future__ import annotations
 

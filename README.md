@@ -66,7 +66,7 @@ field, which files to upload, how to test it and how to share it.
 ### Under your own branding
 
 ```bash
-uv run just quickstart cdsr
+uv run just quickstart acme
 ```
 
 Name a profile that does not exist yet and the wizard runs on the way through. It asks for your
@@ -284,6 +284,98 @@ Every render prints the spend, so the budget stays visible:
 ```
 
 Full reasoning in [docs/instruction-budget.md](./docs/instruction-budget.md).
+
+## Adopting this inside your own organisation
+
+The full path, for taking these agents into an organisation with its own name, its own standards and
+its own module registry. Every step is local: nothing here needs a tenant until step 7.
+
+### 1. Get the code in
+
+Download the repository as a zip and copy it into wherever you keep internal tooling. You do not
+need to clone or keep a git remote, and the tools are built for that: `just rebrand` backs up every
+file it touches rather than assuming `git checkout .` can undo it.
+
+### 2. Set your tokens, before anything else
+
+Edit `profiles/default.yaml` (or create a profile, see step 3). **The tokens are what rebrand the
+agents and their knowledge**, and getting this wrong is the commonest mistake:
+
+```yaml
+tokens:
+  brand_short: ACME                        # agent names. Keep it short: Agent Builder allows 30 characters
+  brand_name: Acme Corporation             # prose, inside the instructions
+  brand_infix: acme                        # the lower case code inside generated resource names
+  registry_url: app.terraform.io/acme      # where YOUR modules live
+  docs_url: docs.acme.example/standards    # where YOUR standards live, no scheme
+  cmdlet_prefix: Acme                      # the PowerShell noun prefix: Invoke-AcmeTerraformPlan
+  ps_module_name: AcmeHelpers              # the module those helpers live in
+```
+
+### 3. Or let the wizard do it
+
+```bash
+uv run just quickstart acme
+```
+
+Naming a profile that does not exist runs the wizard on the way through. It asks for the
+organisation name, URLs and colour, each with a default, derives `cmdlet_prefix` and
+`ps_module_name` for you, and then **asks for your own standards**, importing a file or a whole
+folder and converting Markdown, YAML or JSON into the `.txt` Agent Builder requires.
+
+Imported documents land in `knowledge/local/`, which is **gitignored**, so an internal standard
+cannot become committable by being dropped in the obvious place. Hold Enter through everything and
+you still get a working build on the shipped standards.
+
+### 4. Point the module addresses at your registry
+
+If you maintain your own copies of the modules the standards reference, say where, and both the
+`source = "..."` address and its registry documentation link are repointed:
+
+```yaml
+module_sources:
+  libre-devops/logic-app-workflow/azurerm: app.terraform.io/acme/logic-app-workflow/azapi
+```
+
+### 5. Rebrand the shipped standards, if they are yours to rebrand
+
+```bash
+uv run just localise-knowledge
+```
+
+This applies your tokens to the prose and writes the result into `knowledge/local/`, leaving the
+upstream packs untouched so `just update-knowledge` still works. It prints an `agent_overrides`
+block to paste into your profile.
+
+> **Only do this if the standards are yours.** Rewriting the branding on a document somebody else
+> wrote falsifies it. If you are simply using the shipped standards as they are, skip this step.
+
+### 6. Build
+
+```bash
+uv run just render acme && uv run just lint acme
+```
+
+Then open `build/acme/<agent>/BUILD-GUIDE.md`, which is a paste-ready rendering of every Agent
+Builder field in the order the form asks for them.
+
+### 7. Create the agent
+
+Go to <https://m365.cloud.microsoft/agents/new>, choose **Skip to configure**, and work down the
+build guide. Upload the knowledge files before adding any websites. See
+[Build an agent in Agent Builder](#build-an-agent-in-agent-builder) for the detail.
+
+### What to check before you share it
+
+- **No upstream branding leaked.** `just lint <profile>` fails on a default token value surviving
+  into a rebranded render, which is the check that catches the subtle ones like a product code
+  inside a generated resource name.
+- **The agent name fits.** Agent Builder allows 30 characters where the manifest allows 100. A long
+  `brand_short` will trip the linter's warning.
+- **Your standards actually loaded.** Ask the agent something only your document answers, and
+  confirm it cites the document rather than answering generically.
+
+---
 
 ## Forking it entirely
 
