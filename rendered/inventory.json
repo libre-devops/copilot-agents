@@ -10,6 +10,19 @@
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
       "knowledge/declarative-agent-schema.txt": "8c7dc8fcf91642f4c2fb7d75661cc569a34b33bdee2d03392ddfdbf917affda6"
     },
+    "azure-infra-consultant": {
+      "declarativeAgent.json": "ffa9b61e5e1507ccfb7dc8e31551084bdc3f223617685d65a62b6306ccb41d96",
+      "manifest.json": "7ba00a23286aaf8ff3fcb0da1c4623bdc1654a0072dd4040e22b45c139a9ce8d",
+      "BUILD-GUIDE.md": "4353bda50aa1d8349e55804ca2508be9860eb43a999c490560a49ee2395b15d4",
+      "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/terraform-standards.txt": "8ea70123d3c0e8d1a725a0a2853deb1fb3e4b09c3445b6af4ec41e5384cf2055",
+      "knowledge/azure-naming-convention.txt": "b352220b177d13962f660ba07f157e151f10a7e7d66be29a0672cfca32c9b503",
+      "knowledge/cicd-standards.txt": "25ec7f9889481b6d5caa61b71dcdb6a400d769ba0138d26eb6b28da5daa84557",
+      "knowledge/caf-landing-zone-design-areas.txt": "ccccfa0512071bd9a3ea6fad69b5d4ef2f5c56cf219ba5c019b17fa937bc8f70",
+      "knowledge/caf-resource-naming.txt": "6a004680b0af23b3a1017b1ceb200493ef96a37c4e7aa8d2770172c2b1ecba67",
+      "knowledge/caf-resource-abbreviations.txt": "c44ec37a198ec1ad02e712b4c29a780a4cf43800105d5988ab8eba03f898ea14"
+    },
     "kql-hunt-author": {
       "declarativeAgent.json": "cfb468c1536ef845e1621ddefc7e0734777295fbbbf2953bd839128269aa21ba",
       "manifest.json": "84a8b95859adfaa5e0b98a4efc7d4092b07a83c8794fcccef6b963fe29c0b836",

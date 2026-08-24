@@ -164,6 +164,27 @@ sources:
     title: Surface custom event details in Microsoft Sentinel alerts
     url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/surface-custom-details-in-alerts.md
 
+  # Azure architecture grounding for the infrastructure consultant. The house standards ARE the
+  # opinion; CAF supplies the vendor's structure around it. The Well-Architected Framework is
+  # deliberately NOT a knowledge pack: it has no reliable public markdown mirror (the one that
+  # exists is a 2019 sandbox archive), so the five pillars live in the instructions as a review
+  # lens and the detail comes from scoped web search against the live pages.
+  - name: cicd-standards.txt
+    title: Libre DevOps CI/CD Standard
+    url: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/documents/cicd-standards.mdx
+
+  - name: caf-landing-zone-design-areas.txt
+    title: Cloud Adoption Framework landing zone design areas
+    url: https://raw.githubusercontent.com/MicrosoftDocs/cloud-adoption-framework/main/docs/ready/landing-zone/design-areas.md
+
+  - name: caf-resource-naming.txt
+    title: Cloud Adoption Framework resource naming guidance
+    url: https://raw.githubusercontent.com/MicrosoftDocs/cloud-adoption-framework/main/docs/ready/azure-best-practices/resource-naming.md
+
+  - name: caf-resource-abbreviations.txt
+    title: Cloud Adoption Framework resource abbreviations
+    url: https://raw.githubusercontent.com/MicrosoftDocs/cloud-adoption-framework/main/docs/ready/azure-best-practices/resource-abbreviations.md
+
   - name: declarative-agent-schema.txt
     title: Microsoft 365 declarative agent manifest schema v1.8
     url: https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.8/schema.json
