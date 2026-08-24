@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.18/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.18",
+  "version": "1.0.0",
+  "id": "abc33cc2-1abe-5a9c-88b3-493e179a596c",
+  "developer": {
+    "name": "Libre DevOps",
+    "websiteUrl": "https://libredevops.org",
+    "privacyUrl": "https://github.com/libre-devops/copilot-agents#privacy",
+    "termsOfUseUrl": "https://github.com/libre-devops/copilot-agents/blob/main/LICENSE"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "LDO MDE Excl",
+    "full": "Libre DevOps MDE Exclusion Reviewer"
+  },
+  "description": {
+    "short": "Reviews Defender exclusions against enterprise safety nets.",
+    "full": "Reviews Microsoft Defender for Endpoint and Defender Antivirus exclusion requests and existing exclusion lists against the enterprise safety nets: the never-exclude folder, extension and process lists, the blast radius a process exclusion has on ASR rules and network protection, fully qualified paths, LocalSystem variable resolution, per-workload lists, and evidence. Returns one verdict with the record behind it, and never applies anything."
+  },
+  "accentColor": "#15803D",
+  "copilotAgents": {
+    "declarativeAgents": [
+      {
+        "id": "mde-exclusion-reviewer",
+        "file": "declarativeAgent.json"
+      }
+    ]
+  }
+}

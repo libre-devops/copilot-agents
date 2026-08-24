@@ -4,7 +4,7 @@ An agent has two separable halves: what it **does**, and who **publishes** it. F
 definitions own the first. A profile owns the second.
 
 That split is what lets you take this repository, point it at your own organisation, and ship the
-same three agents under your own name without editing a single fragment, and without your
+same agents under your own name without editing a single fragment, and without your
 organisation's details ever appearing in a public commit.
 
 ## Two kinds of rebranding

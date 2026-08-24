@@ -24,6 +24,26 @@
       "knowledge/azapi-provider.txt": "91470518ff416d4d60c43fce3a882f32ab39a5fa8e72132baba2abb320fc91e2",
       "knowledge/azapi-resource.txt": "a35685604045bc9af16836b06a64b8ce7e3d49b023aff0a8afa6fa07d2d5be1b"
     },
+    "mde-exclusion-reviewer": {
+      "declarativeAgent.json": "5c203f68c4409e95d2f71b8f83ea45c9b119fed2fafe3de82732c89b65fc91d5",
+      "manifest.json": "1614fa318d009e18742e268165b807394857d9c7f03fc6ab3bbf86038807535f",
+      "BUILD-GUIDE.md": "39c4ff509bc0a1a86121eaa23859bbe90337a17e665d2e818ea3d8eb83fb50ae",
+      "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/mde-exclusions-to-avoid.txt": "2cbfd0554faf6a84518adec8ca97e199952dd8586e1407c94f1ce14413daeb71",
+      "knowledge/mde-exclusions-overview.txt": "86a5ccb695e004c61b17ee4a0b7e2aff3df4bc0950760fc4d68d2668058a780d",
+      "knowledge/mdav-exclusions-overview.txt": "cccbe2dcdcdd59f1093f528095c442430c363d82e2dc032975f8781b59477ef4",
+      "knowledge/mde-exclusions-reference.txt": "e7eff3dfe56442a1ac9b75f329304536c40d124216c880bb89ac1275f4370d36",
+      "knowledge/asr-rules-reference.txt": "055b56ff5183a90122c903af69ff0922643806795eab31ffc127b1cfe974d118"
+    },
+    "powershell-author": {
+      "declarativeAgent.json": "1be8c18d9e0552adf189cdfb9cc530edf06a38de1d73e45a32fa47e13cdda52f",
+      "manifest.json": "4e4f12cc6e2adf7446f0fa69ee84226b31419ff8cbe0492faccd3675b1eca85c",
+      "BUILD-GUIDE.md": "f03c50b9ebb00df5aad5b69f65365c3a1def4fd44127e5d254ecb761ea2a1d9c",
+      "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/powershell-standards.txt": "bbdca5b1265ac999d423adcc358374733e8fb499fd2eeef591ff0b9ab74c7233"
+    },
     "terraform-author": {
       "declarativeAgent.json": "2f287fc775e5e15bfbd28da01d7594f030267599616a6b9f9b9d3d3f32d99ea5",
       "manifest.json": "b1c50cd0f65a635b4a3545c8b63f14f8ea59126d203d2df1222f88d6b97efcfe",

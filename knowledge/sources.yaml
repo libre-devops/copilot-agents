@@ -61,6 +61,36 @@ sources:
     title: Terraform azapi_resource reference
     url: https://raw.githubusercontent.com/Azure/terraform-provider-azapi/main/docs/resources/resource.md
 
+  # The Libre DevOps PowerShell Standard, for the PowerShell helper agent.
+  - name: powershell-standards.txt
+    title: Libre DevOps PowerShell Standard
+    url: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/documents/powershell-standards.mdx
+
+  # Microsoft Defender for Endpoint exclusions, from the PUBLIC defender-docs mirror. These are the
+  # authority the exclusion reviewer measures a request against, and the first one is the whole
+  # point of that agent: it carries the explicit never-exclude lists.
+  - name: mde-exclusions-to-avoid.txt
+    title: Exclusions to avoid in Microsoft Defender Antivirus and Defender for Endpoint
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-endpoint/defender-endpoint-exclusions-common-mistakes.md
+
+  - name: mde-exclusions-overview.txt
+    title: Overview of exclusions and indicators in Microsoft Defender for Endpoint
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-endpoint/defender-endpoint-exclusions-overview.md
+
+  - name: mdav-exclusions-overview.txt
+    title: Exclusions in Microsoft Defender Antivirus (types, wildcards, system environment variables)
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-endpoint/microsoft-defender-antivirus-exclusions-overview.md
+
+  - name: mde-exclusions-reference.txt
+    title: Exclusions reference for Microsoft Defender for Endpoint
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-endpoint/defender-endpoint-exclusions-configuration-reference.md
+
+  # Carried because a PROCESS exclusion silently stops ASR rules and network protection inspecting
+  # that process. Reviewing an exclusion without knowing what it switches off is the failure mode.
+  - name: asr-rules-reference.txt
+    title: Attack surface reduction rules reference
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-endpoint/attack-surface-reduction-rules-reference.md
+
   - name: declarative-agent-schema.txt
     title: Microsoft 365 declarative agent manifest schema v1.8
     url: https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.8/schema.json

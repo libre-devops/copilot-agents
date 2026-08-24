@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.18/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.18",
+  "version": "1.0.0",
+  "id": "630e63cb-8494-54c3-b22d-f1c7599a1c11",
+  "developer": {
+    "name": "Libre DevOps",
+    "websiteUrl": "https://libredevops.org",
+    "privacyUrl": "https://github.com/libre-devops/copilot-agents#privacy",
+    "termsOfUseUrl": "https://github.com/libre-devops/copilot-agents/blob/main/LICENSE"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "LDO PowerShell",
+    "full": "Libre DevOps PowerShell Author"
+  },
+  "description": {
+    "short": "Writes PowerShell to the Libre DevOps standard.",
+    "full": "Writes and reviews PowerShell 7 to the Libre DevOps PowerShell Standard and the LibreDevOpsHelpers house style: the Ldo noun prefix, approved verbs, strict mode, typed and validated parameters, comment-based help, objects rather than host writes, structured logging with the canonical level vocabulary, terminating versus non-terminating errors, secrets handling, and the PSScriptAnalyzer and Pester gates. Cites its source and never claims to have run anything."
+  },
+  "accentColor": "#15803D",
+  "copilotAgents": {
+    "declarativeAgents": [
+      {
+        "id": "powershell-author",
+        "file": "declarativeAgent.json"
+      }
+    ]
+  }
+}

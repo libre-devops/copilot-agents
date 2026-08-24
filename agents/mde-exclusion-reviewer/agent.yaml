@@ -1,0 +1,77 @@
+# {{brand_short}} MDE Exclusion Reviewer. Source of truth for the rendered declarative agent manifest.
+# Render with: just render mde-exclusion-reviewer
+---
+id: mde-exclusion-reviewer
+name: "{{brand_short}} MDE Exclusion Reviewer"
+description: >-
+  Reviews Microsoft Defender for Endpoint and Defender Antivirus exclusion requests and existing
+  exclusion lists against the enterprise safety nets: the never-exclude folder, extension and
+  process lists, the blast radius a process exclusion has on ASR rules and network protection,
+  fully qualified paths, LocalSystem variable resolution, per-workload lists, and evidence. Returns
+  one verdict with the record behind it, and never applies anything.
+
+# Concatenated in order into the manifest `instructions` field, which caps at 8,000 characters.
+instructions:
+  - shared/literal-execution.md
+  - shared/house-style.md
+  - defender/purpose.md
+  - defender/safety-nets.md
+  - defender/workflow.md
+  - shared/grounding.md
+  - shared/knowledge-precedence.md
+  - shared/output-contract.md
+
+capabilities:
+  # Max 4 sites. Each URL takes at most two path segments and no query string.
+  - name: WebSearch
+    sites:
+      - url: https://learn.microsoft.com/en-us/defender-endpoint
+      - url: https://learn.microsoft.com/en-us/defender-xdr
+      - url: https://learn.microsoft.com/en-us/intune
+      - url: https://{{docs_url}}
+
+# The never-exclude lists are the whole point of this agent, so they are uploaded rather than left
+# to web search: scoped search reads only what Bing indexes, and a reviewer that cannot see the
+# authoritative list is a reviewer with an opinion. Refresh with `just update-knowledge`.
+knowledge_files:
+  - mde-exclusions-to-avoid.txt
+  - mde-exclusions-overview.txt
+  - mdav-exclusions-overview.txt
+  - mde-exclusions-reference.txt
+  - asr-rules-reference.txt
+
+user_overrides:
+  - path: "$.capabilities[?(@.name == 'WebSearch')]"
+    allowed_actions: [remove]
+
+behavior_overrides:
+  # NOT discouraging model knowledge: the agent needs to reason about attacker tradecraft and
+  # platform behaviour that no single uploaded document states. The knowledge precedence fragment
+  # makes Microsoft's lists win wherever they disagree, which is the actual requirement.
+  special_instructions:
+    discourage_model_knowledge: false
+  default_response_mode: Auto
+
+disclaimer:
+  text: >-
+    A review, not an approval. A named human owns every exclusion decision, and the exclusion is
+    only real once it is applied and recorded in your own change process.
+
+conversation_starters:
+  - title: Review a request
+    text: "Review this exclusion request against the {{brand_name}} safety nets and give me a verdict."
+  - title: Audit a list
+    text: "Here is our current exclusion list. Which entries would you reject today, and why?"
+  - title: What does this switch off
+    text: "What does excluding this process actually stop protecting, including ASR rules and network protection?"
+  - title: Narrow it
+    text: "This exclusion is broader than it needs to be. Give me the narrowest form that still fixes the problem."
+  - title: Is this path safe
+    text: "Is this folder on the never-exclude list, and what would an attacker do with it if we excluded it?"
+  - title: Write the record
+    text: "Write the exclusion record for this approved request, with owner, justification and review date."
+
+package:
+  short_name: "{{brand_short}} MDE Excl"
+  full_name: "{{brand_name}} MDE Exclusion Reviewer"
+  short_description: Reviews Defender exclusions against enterprise safety nets.
