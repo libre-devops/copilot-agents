@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.18/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.18",
+  "version": "1.0.0",
+  "id": "76b0b661-328b-53a8-8eb6-75480cb66b16",
+  "developer": {
+    "name": "Libre DevOps",
+    "websiteUrl": "https://libredevops.org",
+    "privacyUrl": "https://github.com/libre-devops/copilot-agents#privacy",
+    "termsOfUseUrl": "https://github.com/libre-devops/copilot-agents/blob/main/LICENSE"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "LDO Azure Infra",
+    "full": "Libre DevOps Azure Infra Consultant"
+  },
+  "description": {
+    "short": "Designs and reviews Azure infrastructure to the Libre DevOps standards.",
+    "full": "Designs and reviews Azure infrastructure to the Libre DevOps standards. Checks for a published house Terraform module before proposing raw resources, assesses every design against the five Well-Architected pillars and names the trade-off it accepted, takes a position on identity (managed identity then OIDC, never a stored secret), network (private by default, and honest about what that breaks), naming, tagging and resilience, and states the cost MODEL rather than a price, because a confident wrong number gets budgeted against."
+  },
+  "accentColor": "#15803D",
+  "copilotAgents": {
+    "declarativeAgents": [
+      {
+        "id": "azure-infra-consultant",
+        "file": "declarativeAgent.json"
+      }
+    ]
+  }
+}

@@ -11,6 +11,7 @@ is crossed.
 | `terraform-author` | `WebSearch` | `libredevops.org/docs/documents`, the HashiCorp language reference, the Libre DevOps registry namespace, Microsoft Learn's Azure documentation |
 | `logic-app-author` | `WebSearch` | `libredevops.org/docs/documents`, Microsoft Learn's Azure and connector documentation |
 | `agent-author` | `WebSearch` | Microsoft Learn's Microsoft 365 and Teams documentation, `developer.microsoft.com/json-schemas`, `libredevops.org/docs/documents` |
+| `azure-infra-consultant` | `WebSearch` | Microsoft Learn's Azure and Cloud Adoption Framework documentation, the Libre DevOps registry namespace, `libredevops.org/docs/documents` |
 | `kql-hunt-author` | `WebSearch` | Microsoft Learn's Kusto, Defender XDR and Azure documentation, `libredevops.org/docs/documents` |
 | `sentinel-rule-author` | `WebSearch` | Microsoft Learn's Azure, Kusto and unified security operations documentation, `libredevops.org/docs/documents` |
 | `mde-exclusion-reviewer` | `WebSearch` | Microsoft Learn's Defender for Endpoint, Defender XDR and Intune documentation, `libredevops.org/docs/documents` |
@@ -82,6 +83,7 @@ exact bytes an agent is grounded in show up in a diff.
 | `terraform-author` | the Terraform Standard, the Azure Naming Convention |
 | `logic-app-author` | the Azure Logic App Standard, the workflow definition schema |
 | `agent-author` | the declarative agent manifest schema |
+| `azure-infra-consultant` | the Terraform, naming and CI/CD standards, the CAF landing zone design areas, resource naming and abbreviations |
 | `kql-hunt-author` | the house KQL and Defender XDR cheatsheets, the Kusto best practices and join reference, the Defender XDR hunting schema and limits |
 | `sentinel-rule-author` | the Sentinel overview and rule types, scheduled and NRT rules, entity mapping and the entities reference, custom details, automation rules, Kusto best practices |
 | `mde-exclusion-reviewer` | Microsoft's never-exclude lists, the exclusion references, the ASR rules reference |
