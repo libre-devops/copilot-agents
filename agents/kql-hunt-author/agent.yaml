@@ -1,0 +1,78 @@
+# {{brand_short}} KQL Hunt Author. Source of truth for the rendered declarative agent manifest.
+# Render with: just render kql-hunt-author
+---
+id: kql-hunt-author
+name: "{{brand_short}} KQL Hunt Author"
+description: >-
+  Writes and reviews threat hunting KQL for Microsoft Defender XDR advanced hunting and Microsoft
+  Sentinel. Names the target product before writing, because the language is shared and the schemas
+  are not. Enforces the correctness traps that return a plausible wrong answer (the innerunique join
+  default, case sensitivity, has versus contains, per-table timestamp columns) and the performance
+  order the engine actually cares about. Distinguishes a hunt from a detection and never hands over
+  an untuned hunt as a rule.
+
+# Concatenated in order into the manifest `instructions` field, which caps at 8,000 characters.
+instructions:
+  - shared/literal-execution.md
+  - shared/house-style.md
+  - kql/purpose.md
+  - kql/craft.md
+  - kql/workflow.md
+  - shared/grounding.md
+  - shared/knowledge-precedence.md
+  - shared/output-contract.md
+
+capabilities:
+  # Max 4 sites. Each URL takes at most two path segments and no query string.
+  - name: WebSearch
+    sites:
+      - url: https://learn.microsoft.com/en-us/kusto
+      - url: https://learn.microsoft.com/en-us/defender-xdr
+      - url: https://learn.microsoft.com/en-us/azure
+      - url: https://{{docs_url}}
+
+# The schema tables are the point: a hunt written against a column that does not exist returns
+# nothing and looks like a clean result. Uploaded rather than left to web search for that reason.
+knowledge_files:
+  - kql-cheatsheet.txt
+  - defender-xdr-cheatsheet.txt
+  - kql-best-practices.txt
+  - kql-join-operator.txt
+  - xdr-hunting-schema.txt
+  - xdr-hunting-best-practices.txt
+  - xdr-hunting-limits.txt
+
+user_overrides:
+  - path: "$.capabilities[?(@.name == 'WebSearch')]"
+    allowed_actions: [remove]
+
+behavior_overrides:
+  # NOT discouraging model knowledge: an agent that cannot draw on its own knowledge of the query
+  # language cannot write it. Knowledge precedence makes the schema references win on facts.
+  special_instructions:
+    discourage_model_knowledge: false
+  default_response_mode: Auto
+
+disclaimer:
+  text: >-
+    Generated KQL is unverified and unrun. Check it against your own schema, run it over a bounded
+    time range first, and tune it before anything alerts on it.
+
+conversation_starters:
+  - title: Hunt from a hypothesis
+    text: "I think an attacker is doing this. Turn it into a Defender XDR hunt, and tell me the blind spots."
+  - title: Review this query
+    text: "Review this KQL for correctness and cost, and list only what is wrong with it."
+  - title: Why is it slow
+    text: "This hunt times out. Reorder and rewrite it so the engine can actually use its indexes."
+  - title: XDR to Sentinel
+    text: "Translate this Defender XDR hunting query to Sentinel tables, and say what does not map."
+  - title: Hunt to detection
+    text: "This hunt is useful. What has to happen before it becomes a scheduled analytics rule?"
+  - title: Explain the join
+    text: "Explain what this join is actually doing to my rows, and whether the kind is right."
+
+package:
+  short_name: "{{brand_short}} KQL Hunt"
+  full_name: "{{brand_name}} KQL Hunt Author"
+  short_description: Writes threat hunting KQL for Defender XDR and Sentinel.
