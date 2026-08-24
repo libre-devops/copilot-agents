@@ -58,6 +58,23 @@
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
       "knowledge/powershell-standards.txt": "bbdca5b1265ac999d423adcc358374733e8fb499fd2eeef591ff0b9ab74c7233"
     },
+    "sentinel-rule-author": {
+      "declarativeAgent.json": "33183e3a33e26e4235e3e73cf18c267178f1b63e843080841d9bc1d4798595f1",
+      "manifest.json": "f5fe3d4e02981fd7ef66fc107f2c05ffeac423fd1199615edc70ee06144d96e0",
+      "BUILD-GUIDE.md": "b7c00aad0a776dd46363734ffe73d481d34e0dd7f13210fdfb41d4dc025177bb",
+      "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/sentinel-overview.txt": "7eed4afb4a309dfe05799a2d32ef5a893d60433848792b96937b900b9333484b",
+      "knowledge/sentinel-threat-detection.txt": "3a8232a12c88c2d2d740af482faccecf4e4434d1b6842e462498ff202dac0e6c",
+      "knowledge/sentinel-scheduled-rules.txt": "1b7860072666d00caae04e69a95c484a2cd70c678c8c0181cd8dac9cd83a0d2e",
+      "knowledge/sentinel-create-rules.txt": "7ffed489b74b3dd8c232ca532aa7d2369b9fea7410c00b529c85880e1324107a",
+      "knowledge/sentinel-entity-mapping.txt": "a7ed3d2e7afbdfa6e507d991051bf58d3f0f742b4602affed459a2602528e070",
+      "knowledge/sentinel-entities-reference.txt": "3acf76c325c962ad9e0a021e21be872d9fab6472fa1c96ad52831da30824cc5d",
+      "knowledge/sentinel-nrt-rules.txt": "e386ad15e715407961e1007078d457b2dfa38adc56e55fb81ba66ad10cd7e4ee",
+      "knowledge/sentinel-automation-rules.txt": "7b9d1f8bf5db6b2a63929724fdbc771a331ea9b1e49df1b48054da38d4d5bc5c",
+      "knowledge/sentinel-custom-details.txt": "e71064109ed2cd6d36af201d79fd1a19af850681fd9894075d3dbd67a82f69dc",
+      "knowledge/kql-best-practices.txt": "f99ff1029ffd8bd799a9cb143b0d61cb352ce31f0da76bd873c8dcc7100acfac"
+    },
     "terraform-author": {
       "declarativeAgent.json": "2f287fc775e5e15bfbd28da01d7594f030267599616a6b9f9b9d3d3f32d99ea5",
       "manifest.json": "b1c50cd0f65a635b4a3545c8b63f14f8ea59126d203d2df1222f88d6b97efcfe",

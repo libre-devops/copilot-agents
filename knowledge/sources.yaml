@@ -123,6 +123,47 @@ sources:
     title: Microsoft Defender XDR advanced hunting quotas and limits
     url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-xdr/advanced-hunting-limits.md
 
+  # Microsoft Sentinel, for the analytics rule author. The overview and rule-type pages are there so
+  # the agent understands the platform as a whole (connectors to tables to rules to alerts to
+  # incidents to automation), not just the rule form. Sentinel docs now live in the defender-docs
+  # mirror rather than azure-docs, which is itself a sign of where the product is going: after
+  # 31 March 2027 Sentinel is Defender-portal only.
+  - name: sentinel-overview.txt
+    title: Microsoft Sentinel overview, and the Defender portal transition
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/overview.md
+
+  - name: sentinel-threat-detection.txt
+    title: Microsoft Sentinel analytics rule types
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/threat-detection.md
+
+  - name: sentinel-scheduled-rules.txt
+    title: Microsoft Sentinel scheduled analytics rules, every setting and limit
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/scheduled-rules-overview.md
+
+  - name: sentinel-create-rules.txt
+    title: Create a Microsoft Sentinel scheduled analytics rule
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/create-analytics-rules.md
+
+  - name: sentinel-entity-mapping.txt
+    title: Map data fields to Microsoft Sentinel entities
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/map-data-fields-to-entities.md
+
+  - name: sentinel-entities-reference.txt
+    title: Microsoft Sentinel entity types and their identifiers
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/entities-reference.md
+
+  - name: sentinel-nrt-rules.txt
+    title: Microsoft Sentinel near-real-time (NRT) analytics rules and their limits
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/near-real-time-rules.md
+
+  - name: sentinel-automation-rules.txt
+    title: Microsoft Sentinel automation rules and playbook triggers
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/automate-incident-handling-with-automation-rules.md
+
+  - name: sentinel-custom-details.txt
+    title: Surface custom event details in Microsoft Sentinel alerts
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/surface-custom-details-in-alerts.md
+
   - name: declarative-agent-schema.txt
     title: Microsoft 365 declarative agent manifest schema v1.8
     url: https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.8/schema.json
