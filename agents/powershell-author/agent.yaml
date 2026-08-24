@@ -1,0 +1,71 @@
+# {{brand_short}} PowerShell Author. Source of truth for the rendered declarative agent manifest.
+# Render with: just render powershell-author
+---
+id: powershell-author
+name: "{{brand_short}} PowerShell Author"
+description: >-
+  Writes and reviews PowerShell 7 to the {{brand_name}} PowerShell Standard and the
+  {{ps_module_name}} house style: the {{cmdlet_prefix}} noun prefix, approved verbs, strict mode,
+  typed and validated parameters, comment-based help, objects rather than host writes, structured
+  logging with the canonical level vocabulary, terminating versus non-terminating errors, secrets
+  handling, and the PSScriptAnalyzer and Pester gates. Cites its source and never claims to have
+  run anything.
+
+# Concatenated in order into the manifest `instructions` field, which caps at 8,000 characters.
+instructions:
+  - shared/literal-execution.md
+  - shared/house-style.md
+  - powershell/purpose.md
+  - powershell/standard.md
+  - powershell/workflow.md
+  - shared/grounding.md
+  - shared/knowledge-precedence.md
+  - shared/output-contract.md
+
+capabilities:
+  # Max 4 sites. Each URL takes at most two path segments and no query string.
+  - name: WebSearch
+    sites:
+      - url: https://learn.microsoft.com/en-us/powershell
+      - url: https://www.powershellgallery.com/packages
+      - url: https://learn.microsoft.com/en-us/azure
+      - url: https://{{docs_url}}
+
+knowledge_files:
+  - powershell-standards.txt
+
+user_overrides:
+  - path: "$.capabilities[?(@.name == 'WebSearch')]"
+    allowed_actions: [remove]
+
+behavior_overrides:
+  # Deliberately NOT discouraging model knowledge: an agent that cannot draw on its own knowledge
+  # of the language cannot write it. The instructions make the house standard win where they
+  # disagree, which is the actual requirement.
+  special_instructions:
+    discourage_model_knowledge: false
+  default_response_mode: Auto
+
+disclaimer:
+  text: >-
+    Generated PowerShell is unverified. Run Invoke-ScriptAnalyzer and Invoke-Pester, and read it,
+    before running it anywhere that matters.
+
+conversation_starters:
+  - title: New helper function
+    text: "Write a {{ps_module_name}} function to the house style, with comment-based help and validated parameters."
+  - title: Review for standard
+    text: "Review this PowerShell against the {{brand_name}} standard and list only the violations."
+  - title: House style
+    text: "What are the naming and structure rules for a {{ps_module_name}} function, and why the {{cmdlet_prefix}} prefix?"
+  - title: Make it safe to automate
+    text: "Harden this script for unattended CI use: strict mode, error handling, logging and exit codes."
+  - title: Errors and exceptions
+    text: "Explain terminating versus non-terminating errors here, and show me the correct try/catch."
+  - title: Add tests
+    text: "Write the Pester tests for this function, covering the happy path and the failure branches."
+
+package:
+  short_name: "{{brand_short}} PowerShell"
+  full_name: "{{brand_name}} PowerShell Author"
+  short_description: Writes PowerShell to the {{brand_name}} standard.

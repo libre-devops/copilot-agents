@@ -61,6 +61,109 @@ sources:
     title: Terraform azapi_resource reference
     url: https://raw.githubusercontent.com/Azure/terraform-provider-azapi/main/docs/resources/resource.md
 
+  # The Libre DevOps PowerShell Standard, for the PowerShell helper agent.
+  - name: powershell-standards.txt
+    title: Libre DevOps PowerShell Standard
+    url: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/documents/powershell-standards.mdx
+
+  # Microsoft Defender for Endpoint exclusions, from the PUBLIC defender-docs mirror. These are the
+  # authority the exclusion reviewer measures a request against, and the first one is the whole
+  # point of that agent: it carries the explicit never-exclude lists.
+  - name: mde-exclusions-to-avoid.txt
+    title: Exclusions to avoid in Microsoft Defender Antivirus and Defender for Endpoint
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-endpoint/defender-endpoint-exclusions-common-mistakes.md
+
+  - name: mde-exclusions-overview.txt
+    title: Overview of exclusions and indicators in Microsoft Defender for Endpoint
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-endpoint/defender-endpoint-exclusions-overview.md
+
+  - name: mdav-exclusions-overview.txt
+    title: Exclusions in Microsoft Defender Antivirus (types, wildcards, system environment variables)
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-endpoint/microsoft-defender-antivirus-exclusions-overview.md
+
+  - name: mde-exclusions-reference.txt
+    title: Exclusions reference for Microsoft Defender for Endpoint
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-endpoint/defender-endpoint-exclusions-configuration-reference.md
+
+  # Carried because a PROCESS exclusion silently stops ASR rules and network protection inspecting
+  # that process. Reviewing an exclusion without knowing what it switches off is the failure mode.
+  - name: asr-rules-reference.txt
+    title: Attack surface reduction rules reference
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-endpoint/attack-surface-reduction-rules-reference.md
+
+  # KQL and threat hunting, for the hunt author. The house cheatsheets first, then the language
+  # authority from the PUBLIC Kusto docs mirror, then the Defender XDR hunting schema.
+  - name: kql-cheatsheet.txt
+    title: Libre DevOps KQL Cheatsheet
+    url: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/cheatsheets/kql-cheatsheet.mdx
+
+  - name: defender-xdr-cheatsheet.txt
+    title: Libre DevOps Defender XDR Cheatsheet
+    url: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/cheatsheets/defender-xdr-cheatsheet.mdx
+
+  - name: kql-best-practices.txt
+    title: Best practices for Kusto Query Language queries
+    url: https://raw.githubusercontent.com/MicrosoftDocs/dataexplorer-docs/main/data-explorer/kusto/query/best-practices.md
+
+  # Carried on its own because the DEFAULT join flavour is innerunique, which silently
+  # deduplicates the left side. That single default is the most expensive trap in hunting KQL.
+  - name: kql-join-operator.txt
+    title: KQL join operator, flavours and the innerunique default
+    url: https://raw.githubusercontent.com/MicrosoftDocs/dataexplorer-docs/main/data-explorer/kusto/query/join-operator.md
+
+  - name: xdr-hunting-schema.txt
+    title: Microsoft Defender XDR advanced hunting schema tables
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-xdr/advanced-hunting-schema-tables.md
+
+  - name: xdr-hunting-best-practices.txt
+    title: Microsoft Defender XDR advanced hunting query best practices
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-xdr/advanced-hunting-best-practices.md
+
+  - name: xdr-hunting-limits.txt
+    title: Microsoft Defender XDR advanced hunting quotas and limits
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/defender-xdr/advanced-hunting-limits.md
+
+  # Microsoft Sentinel, for the analytics rule author. The overview and rule-type pages are there so
+  # the agent understands the platform as a whole (connectors to tables to rules to alerts to
+  # incidents to automation), not just the rule form. Sentinel docs now live in the defender-docs
+  # mirror rather than azure-docs, which is itself a sign of where the product is going: after
+  # 31 March 2027 Sentinel is Defender-portal only.
+  - name: sentinel-overview.txt
+    title: Microsoft Sentinel overview, and the Defender portal transition
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/overview.md
+
+  - name: sentinel-threat-detection.txt
+    title: Microsoft Sentinel analytics rule types
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/threat-detection.md
+
+  - name: sentinel-scheduled-rules.txt
+    title: Microsoft Sentinel scheduled analytics rules, every setting and limit
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/scheduled-rules-overview.md
+
+  - name: sentinel-create-rules.txt
+    title: Create a Microsoft Sentinel scheduled analytics rule
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/create-analytics-rules.md
+
+  - name: sentinel-entity-mapping.txt
+    title: Map data fields to Microsoft Sentinel entities
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/map-data-fields-to-entities.md
+
+  - name: sentinel-entities-reference.txt
+    title: Microsoft Sentinel entity types and their identifiers
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/entities-reference.md
+
+  - name: sentinel-nrt-rules.txt
+    title: Microsoft Sentinel near-real-time (NRT) analytics rules and their limits
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/near-real-time-rules.md
+
+  - name: sentinel-automation-rules.txt
+    title: Microsoft Sentinel automation rules and playbook triggers
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/automate-incident-handling-with-automation-rules.md
+
+  - name: sentinel-custom-details.txt
+    title: Surface custom event details in Microsoft Sentinel alerts
+    url: https://raw.githubusercontent.com/MicrosoftDocs/defender-docs/public/sentinel/surface-custom-details-in-alerts.md
+
   - name: declarative-agent-schema.txt
     title: Microsoft 365 declarative agent manifest schema v1.8
     url: https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.8/schema.json

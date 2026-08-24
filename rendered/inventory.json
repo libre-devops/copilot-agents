@@ -10,6 +10,20 @@
       "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
       "knowledge/declarative-agent-schema.txt": "8c7dc8fcf91642f4c2fb7d75661cc569a34b33bdee2d03392ddfdbf917affda6"
     },
+    "kql-hunt-author": {
+      "declarativeAgent.json": "cfb468c1536ef845e1621ddefc7e0734777295fbbbf2953bd839128269aa21ba",
+      "manifest.json": "84a8b95859adfaa5e0b98a4efc7d4092b07a83c8794fcccef6b963fe29c0b836",
+      "BUILD-GUIDE.md": "96a6cce0da5759146ee0df9df87499d67f8c0ee99a1e628a796e4f4838c3aeab",
+      "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/kql-cheatsheet.txt": "6ce51a8ad9b4aab2c7ba8bca8037aaf1af4bad50085a08616c6d171023054d6b",
+      "knowledge/defender-xdr-cheatsheet.txt": "e77e0d82538da298e9a8fb6ed433da410721f3a569c147fb0310dca82b4bd829",
+      "knowledge/kql-best-practices.txt": "f99ff1029ffd8bd799a9cb143b0d61cb352ce31f0da76bd873c8dcc7100acfac",
+      "knowledge/kql-join-operator.txt": "b3be5d0961b02d17109ee4eb4aa92ddedd3b98669f2ca78122511b8dc7f5283c",
+      "knowledge/xdr-hunting-schema.txt": "35ef19db8f6cec1bb17cd7f2330cec2f9204f2186a1fb49046b2691013ea0a45",
+      "knowledge/xdr-hunting-best-practices.txt": "a0ff0b152d55ea4425469cf4b5955ac3ef9623457d68bc3066e9444e8ba43f18",
+      "knowledge/xdr-hunting-limits.txt": "5eed74da5460a4330c7e6e530f1cc2e30d223a685fb4b6d1fd782f43a76ee45b"
+    },
     "logic-app-author": {
       "declarativeAgent.json": "4163f3c7e87c72b8b7611c6bd8181c3388be4ab05311911bb0d2a90e6021ab31",
       "manifest.json": "b16f8eb2b49d85c67fa5419267837c90c93fac1caa3eff64de9e9fc470228e31",
@@ -23,6 +37,43 @@
       "knowledge/wdl-expression-functions.txt": "66f856f912b1bfd60557705106de837a2821d200a5093ea223aca714cfd5f34f",
       "knowledge/azapi-provider.txt": "91470518ff416d4d60c43fce3a882f32ab39a5fa8e72132baba2abb320fc91e2",
       "knowledge/azapi-resource.txt": "a35685604045bc9af16836b06a64b8ce7e3d49b023aff0a8afa6fa07d2d5be1b"
+    },
+    "mde-exclusion-reviewer": {
+      "declarativeAgent.json": "5c203f68c4409e95d2f71b8f83ea45c9b119fed2fafe3de82732c89b65fc91d5",
+      "manifest.json": "1614fa318d009e18742e268165b807394857d9c7f03fc6ab3bbf86038807535f",
+      "BUILD-GUIDE.md": "39c4ff509bc0a1a86121eaa23859bbe90337a17e665d2e818ea3d8eb83fb50ae",
+      "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/mde-exclusions-to-avoid.txt": "2cbfd0554faf6a84518adec8ca97e199952dd8586e1407c94f1ce14413daeb71",
+      "knowledge/mde-exclusions-overview.txt": "86a5ccb695e004c61b17ee4a0b7e2aff3df4bc0950760fc4d68d2668058a780d",
+      "knowledge/mdav-exclusions-overview.txt": "cccbe2dcdcdd59f1093f528095c442430c363d82e2dc032975f8781b59477ef4",
+      "knowledge/mde-exclusions-reference.txt": "e7eff3dfe56442a1ac9b75f329304536c40d124216c880bb89ac1275f4370d36",
+      "knowledge/asr-rules-reference.txt": "055b56ff5183a90122c903af69ff0922643806795eab31ffc127b1cfe974d118"
+    },
+    "powershell-author": {
+      "declarativeAgent.json": "1be8c18d9e0552adf189cdfb9cc530edf06a38de1d73e45a32fa47e13cdda52f",
+      "manifest.json": "4e4f12cc6e2adf7446f0fa69ee84226b31419ff8cbe0492faccd3675b1eca85c",
+      "BUILD-GUIDE.md": "f03c50b9ebb00df5aad5b69f65365c3a1def4fd44127e5d254ecb761ea2a1d9c",
+      "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/powershell-standards.txt": "bbdca5b1265ac999d423adcc358374733e8fb499fd2eeef591ff0b9ab74c7233"
+    },
+    "sentinel-rule-author": {
+      "declarativeAgent.json": "33183e3a33e26e4235e3e73cf18c267178f1b63e843080841d9bc1d4798595f1",
+      "manifest.json": "f5fe3d4e02981fd7ef66fc107f2c05ffeac423fd1199615edc70ee06144d96e0",
+      "BUILD-GUIDE.md": "b7c00aad0a776dd46363734ffe73d481d34e0dd7f13210fdfb41d4dc025177bb",
+      "color.png": "2e1356cb66652487cf0e7ca8e7add4ef501d32b9535ea984bd44cf3b1389ee7a",
+      "outline.png": "0a7e8819db1acbe0b5dafe5353b5f4d60cf7a18d74d55b1b8d0de9e8f29f6672",
+      "knowledge/sentinel-overview.txt": "7eed4afb4a309dfe05799a2d32ef5a893d60433848792b96937b900b9333484b",
+      "knowledge/sentinel-threat-detection.txt": "3a8232a12c88c2d2d740af482faccecf4e4434d1b6842e462498ff202dac0e6c",
+      "knowledge/sentinel-scheduled-rules.txt": "1b7860072666d00caae04e69a95c484a2cd70c678c8c0181cd8dac9cd83a0d2e",
+      "knowledge/sentinel-create-rules.txt": "7ffed489b74b3dd8c232ca532aa7d2369b9fea7410c00b529c85880e1324107a",
+      "knowledge/sentinel-entity-mapping.txt": "a7ed3d2e7afbdfa6e507d991051bf58d3f0f742b4602affed459a2602528e070",
+      "knowledge/sentinel-entities-reference.txt": "3acf76c325c962ad9e0a021e21be872d9fab6472fa1c96ad52831da30824cc5d",
+      "knowledge/sentinel-nrt-rules.txt": "e386ad15e715407961e1007078d457b2dfa38adc56e55fb81ba66ad10cd7e4ee",
+      "knowledge/sentinel-automation-rules.txt": "7b9d1f8bf5db6b2a63929724fdbc771a331ea9b1e49df1b48054da38d4d5bc5c",
+      "knowledge/sentinel-custom-details.txt": "e71064109ed2cd6d36af201d79fd1a19af850681fd9894075d3dbd67a82f69dc",
+      "knowledge/kql-best-practices.txt": "f99ff1029ffd8bd799a9cb143b0d61cb352ce31f0da76bd873c8dcc7100acfac"
     },
     "terraform-author": {
       "declarativeAgent.json": "2f287fc775e5e15bfbd28da01d7594f030267599616a6b9f9b9d3d3f32d99ea5",

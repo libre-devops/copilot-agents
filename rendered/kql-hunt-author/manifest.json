@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.18/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.18",
+  "version": "1.0.0",
+  "id": "f81c6f8f-e6e2-5a83-a03e-2a2163944fa2",
+  "developer": {
+    "name": "Libre DevOps",
+    "websiteUrl": "https://libredevops.org",
+    "privacyUrl": "https://github.com/libre-devops/copilot-agents#privacy",
+    "termsOfUseUrl": "https://github.com/libre-devops/copilot-agents/blob/main/LICENSE"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "LDO KQL Hunt",
+    "full": "Libre DevOps KQL Hunt Author"
+  },
+  "description": {
+    "short": "Writes threat hunting KQL for Defender XDR and Sentinel.",
+    "full": "Writes and reviews threat hunting KQL for Microsoft Defender XDR advanced hunting and Microsoft Sentinel. Names the target product before writing, because the language is shared and the schemas are not. Enforces the correctness traps that return a plausible wrong answer (the innerunique join default, case sensitivity, has versus contains, per-table timestamp columns) and the performance order the engine actually cares about. Distinguishes a hunt from a detection and never hands over an untuned hunt as a rule."
+  },
+  "accentColor": "#15803D",
+  "copilotAgents": {
+    "declarativeAgents": [
+      {
+        "id": "kql-hunt-author",
+        "file": "declarativeAgent.json"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1275 @@
+Source: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/cheatsheets/kql-cheatsheet.mdx
+Fetched by tools/fetch_knowledge.py. Do not edit by hand.
+
+# Libre DevOps KQL Cheatsheet
+
+# KQL / Microsoft Defender Cheat Sheet
+
+Kusto Query Language (KQL) is used across Microsoft Sentinel, Defender XDR, Azure Monitor, and Azure Data Explorer (ADX). Queries pipe data through operators left-to-right - each `|` feeds the result of the previous step into the next.
+
+> **Versions:** Microsoft Sentinel (2024+) · Defender XDR · Azure Data Explorer · Azure Monitor Logs
+>
+> **Last reviewed:** May 2026
+
+---
+
+## KQL Fundamentals
+
+### Basic query structure
+
+```kql
+TableName
+| where TimeGenerated > ago(24h)
+| where ColumnName == "value"
+| project TimeGenerated, Column1, Column2, Column3
+| sort by TimeGenerated desc
+| take 100
+```
+
+### Count rows
+
+```kql
+SecurityEvent | count
+```
+
+### Distinct values in a column
+
+```kql
+SecurityEvent
+| distinct Account
+```
+
+### Rename and add columns with `project` and `extend`
+
+```kql
+DeviceProcessEvents
+| project Timestamp, DeviceName, FileName, ProcessCommandLine
+| extend CommandLength = strlen(ProcessCommandLine)
+```
+
+### Conditional column with `iff`
+
+```kql
+SecurityEvent
+| extend IsPrivileged = iff(TargetUserName contains "admin", true, false)
+```
+
+### Case expression
+
+```kql
+SecurityEvent
+| extend Severity = case(
+    EventID == 4625, "Failed Logon",
+    EventID == 4648, "Explicit Credential Use",
+    EventID == 4720, "Account Created",
+    "Other"
+)
+```
+
+### Top N results by a column
+
+```kql
+DeviceProcessEvents
+| summarize Count = count() by FileName
+| top 20 by Count desc
+```
+
+---
+
+## Time Filtering
+
+### Relative time ranges
+
+```kql
+| where TimeGenerated > ago(1h)    // last hour
+| where TimeGenerated > ago(7d)    // last 7 days
+| where TimeGenerated > ago(30m)   // last 30 minutes
+```
+
+### Absolute time range
+
+```kql
+| where TimeGenerated between (datetime(2024-06-01) .. datetime(2024-06-30))
+```
+
+### Specific day
+
+```kql
+| where TimeGenerated >= startofday(ago(1d))
+  and  TimeGenerated <  startofday(now())
+```
+
+### Bin by time (for trend charts)
+
+```kql
+SecurityEvent
+| where TimeGenerated > ago(7d)
+| summarize Count = count() by bin(TimeGenerated, 1h)
+| render timechart
+```
+
+### Bin by day
+
+```kql
+SigninLogs
+| summarize Failures = count() by bin(TimeGenerated, 1d), UserPrincipalName
+| render timechart
+```
+
+---
+
+## String Operations
+
+### Equality and contains
+
+```kql
+| where FileName == "powershell.exe"
+| where ProcessCommandLine contains "-EncodedCommand"
+| where ProcessCommandLine has "IEX"           // faster than contains for whole words
+| where AccountName startswith "svc-"
+| where AccountName endswith "-admin"
+```
+
+### Case-insensitive matching
+
+```kql
+| where tolower(FileName) == "powershell.exe"
+```
+
+### Regex match
+
+```kql
+| where ProcessCommandLine matches regex @"(?i)(mimikatz|sekurlsa|lsadump)"
+| where Url matches regex @"https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+```
+
+### Multiple values with `in`
+
+```kql
+| where EventID in (4624, 4625, 4648, 4672, 4720)
+| where FileName in~ ("powershell.exe", "cmd.exe", "wscript.exe", "cscript.exe")
+// in~  is case-insensitive
+```
+
+### Exclusion with `!in` and `!contains`
+
+```kql
+| where AccountName !in ("system", "network service", "local service")
+| where ProcessCommandLine !contains "legitimate_script.ps1"
+```
+
+### Extract with regex
+
+```kql
+DeviceProcessEvents
+| extend Domain = extract(@"([a-zA-Z0-9\-]+\.[a-zA-Z]{2,})", 1, ProcessCommandLine)
+```
+
+### Parse a structured string
+
+```kql
+CommonSecurityLog
+| parse Message with * "src=" SrcIP " " * "dst=" DstIP " " *
+```
+
+### Split a string into an array
+
+```kql
+| extend Parts = split(ProcessCommandLine, " ")
+| extend FirstArg = tostring(Parts[0])
+```
+
+### String length and manipulation
+
+```kql
+| extend CmdLen      = strlen(ProcessCommandLine)
+| extend CmdUpper    = toupper(ProcessCommandLine)
+| extend CmdTrimmed  = trim(" ", ProcessCommandLine)
+| extend CmdReplace  = replace_string(ProcessCommandLine, "\\\\", "\\")
+```
+
+---
+
+## Aggregations & Statistics
+
+### Count by column
+
+```kql
+SecurityEvent
+| summarize Count = count() by EventID
+| sort by Count desc
+```
+
+### Multiple aggregations at once
+
+```kql
+DeviceNetworkEvents
+| summarize
+    TotalConnections = count(),
+    UniqueRemoteIPs  = dcount(RemoteIP),
+    UniqueRemotePorts = dcount(RemotePort)
+  by DeviceName
+```
+
+### Collect values into a set or list
+
+```kql
+DeviceProcessEvents
+| summarize
+    CommandLines = make_set(ProcessCommandLine, 50),
+    ParentProcesses = make_list(InitiatingProcessFileName, 20)
+  by FileName, DeviceName
+```
+
+### Percentiles (useful for beaconing / anomaly detection)
+
+```kql
+DeviceNetworkEvents
+| summarize
+    p50 = percentile(BytesSent, 50),
+    p95 = percentile(BytesSent, 95),
+    p99 = percentile(BytesSent, 99)
+  by RemoteIP
+```
+
+### Standard deviation (spot outliers)
+
+```kql
+DeviceNetworkEvents
+| summarize
+    AvgBytes = avg(BytesSent),
+    StdDev   = stdev(BytesSent),
+    Count    = count()
+  by DeviceName, RemoteIP
+| where StdDev > 0
+| extend CoV = StdDev / AvgBytes  // coefficient of variation - high = erratic, low = regular
+```
+
+### Count distinct (approximate for large datasets)
+
+```kql
+SigninLogs
+| summarize UniqueUsers = dcount(UserPrincipalName) by AppDisplayName
+```
+
+---
+
+## Joins & Lookups
+
+### Inner join - match rows in both tables
+
+```kql
+let SuspiciousIPs = externaldata(IP: string)
+    [@"https://your-storage/blocklist.csv"] with (format="csv");
+DeviceNetworkEvents
+| join kind=inner SuspiciousIPs on $left.RemoteIP == $right.IP
+```
+
+### Left outer join - keep all left rows, enrich where match found
+
+```kql
+SecurityEvent
+| where EventID == 4625
+| join kind=leftouter (
+    SecurityEvent
+    | where EventID == 4624
+    | project SuccessAccount = Account, SuccessTime = TimeGenerated
+  ) on Account
+```
+
+### Semi join - "where a matching row exists in another table"
+
+```kql
+DeviceProcessEvents
+| where FileName == "powershell.exe"
+| join kind=leftsemi (
+    DeviceNetworkEvents
+    | where RemotePort in (80, 443, 4444, 8080)
+  ) on DeviceId
+```
+
+### lookup - enrich with a reference dataset
+
+```kql
+let RiskScores = datatable(FileName: string, RiskScore: int)
+    [ "mimikatz.exe", 100,
+      "psexec.exe",   70,
+      "nc.exe",       80 ];
+DeviceProcessEvents
+| lookup RiskScores on FileName
+| where isnotempty(RiskScore)
+```
+
+---
+
+## `let` Statements & Reusable Logic
+
+### Define a variable
+
+```kql
+let Threshold = 10;
+let LookbackPeriod = 7d;
+SigninLogs
+| where TimeGenerated > ago(LookbackPeriod)
+| summarize Failures = count() by UserPrincipalName
+| where Failures > Threshold
+```
+
+### Define a reusable sub-query
+
+```kql
+let FailedLogins =
+    SecurityEvent
+    | where EventID == 4625
+    | summarize FailCount = count() by Account, IpAddress;
+let SuccessLogins =
+    SecurityEvent
+    | where EventID == 4624
+    | summarize SuccessCount = count() by Account, IpAddress;
+FailedLogins
+| join kind=inner SuccessLogins on Account
+| where FailCount > 10 and SuccessCount > 0
+```
+
+### Tabular function (reusable parameterised query)
+
+```kql
+let GetFailedLogons = (lookback: timespan, threshold: int) {
+    SecurityEvent
+    | where TimeGenerated > ago(lookback)
+    | where EventID == 4625
+    | summarize Count = count() by Account
+    | where Count > threshold
+};
+GetFailedLogons(1d, 20)
+```
+
+---
+
+## Common Defender & Sentinel Tables
+
+| Table | Source | What it contains |
+|---|---|---|
+| `SecurityEvent` | Windows via MMA/AMA | Windows Security Event Log (4624, 4625, 4720, etc.) |
+| `Syslog` | Linux via MMA/AMA | Linux syslog and auth.log entries |
+| `SigninLogs` | Entra ID | Interactive user sign-ins |
+| `AADNonInteractiveUserSignInLogs` | Entra ID | Non-interactive sign-ins (OAuth tokens, legacy auth) |
+| `AADServicePrincipalSignInLogs` | Entra ID | Service principal and managed identity sign-ins |
+| `AuditLogs` | Entra ID | Directory change events (user/group/role/app changes) |
+| `DeviceProcessEvents` | Defender for Endpoint | Process creation events on enrolled devices |
+| `DeviceNetworkEvents` | Defender for Endpoint | Network connections initiated by enrolled devices |
+| `DeviceFileEvents` | Defender for Endpoint | File creation, modification, deletion on enrolled devices |
+| `DeviceLogonEvents` | Defender for Endpoint | Logon/logoff events on enrolled devices |
+| `DeviceRegistryEvents` | Defender for Endpoint | Registry key read/write/delete events |
+| `DeviceEvents` | Defender for Endpoint | Generic device events (PowerShell, WMI, AMSI, etc.) |
+| `SecurityAlert` | All Defender products | All generated security alerts |
+| `SecurityIncident` | Microsoft Sentinel | Incidents (groups of correlated alerts) |
+| `AlertEvidence` | Defender XDR | Entities (IPs, files, users) linked to an alert |
+| `CloudAppEvents` | Defender for Cloud Apps | M365 and connected SaaS app activity |
+| `OfficeActivity` | M365 | SharePoint, Teams, Exchange, OneDrive audit logs |
+| `EmailEvents` | Defender for Office 365 | Emails received, sent, blocked |
+| `EmailAttachmentInfo` | Defender for Office 365 | Attachment metadata for emails |
+| `EmailUrlInfo` | Defender for Office 365 | URLs found in emails |
+| `UrlClickEvents` | Defender for Office 365 | Safe Links clicks and verdicts |
+| `IdentityLogonEvents` | Defender for Identity | AD authentication events |
+| `IdentityQueryEvents` | Defender for Identity | LDAP/Kerberos/SAMR queries against AD |
+| `IdentityDirectoryEvents` | Defender for Identity | AD object changes (groups, GPOs, accounts) |
+| `BehaviorAnalytics` | Sentinel UEBA | User and entity anomaly scores |
+| `ThreatIntelligenceIndicator` | Threat Intelligence | IOCs (IPs, domains, hashes, URLs) |
+| `CommonSecurityLog` | CEF via AMA | Third-party firewall/IDS/proxy logs in CEF format |
+| `AzureActivity` | Azure Resource Manager | Control-plane audit log - all ARM operations (create, delete, role assignments, policy changes) |
+| `AzureDiagnostics` | Azure resources | Diagnostic logs from Azure services (Key Vault access, NSG flow logs, SQL audit, App Service, etc.) |
+| `AzureMetrics` | Azure Monitor | Resource metrics (CPU, memory, request counts, latency) at configurable granularity |
+| `StorageBlobLogs` | Azure Storage | Blob read/write/delete operations - useful for data-exfiltration hunting |
+
+> **See also:** [Azure - Azure Monitor & Log Analytics](/docs/cheatsheets/azure-cheatsheet) for workspace setup, diagnostic settings, and Log Analytics CLI commands. [PowerShell - Microsoft Sentinel](/docs/cheatsheets/powershell-cheatsheet) for watchlist and automation rule management.
+
+---
+
+## Threat Hunting - Processes 🔬
+
+### Suspicious PowerShell - encoded commands or download cradles
+
+```kql
+DeviceProcessEvents
+| where TimeGenerated > ago(7d)
+| where FileName in~ ("powershell.exe", "pwsh.exe")
+| where ProcessCommandLine matches regex @"(?i)(-enc|-encodedcommand|IEX|Invoke-Expression|DownloadString|DownloadFile|WebClient|hidden)"
+| project Timestamp, DeviceName, AccountName, ProcessCommandLine
+| sort by Timestamp desc
+```
+
+### LOLBins - living-off-the-land binaries used to run code
+
+```kql
+DeviceProcessEvents
+| where TimeGenerated > ago(1d)
+| where FileName in~ (
+    "certutil.exe", "mshta.exe", "wscript.exe", "cscript.exe",
+    "regsvr32.exe", "rundll32.exe", "msiexec.exe", "odbcconf.exe",
+    "installutil.exe", "regasm.exe", "regsvcs.exe", "msconfig.exe",
+    "xwizard.exe", "syncappvpublishingserver.exe"
+  )
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine, InitiatingProcessFileName
+```
+
+### Processes spawned by Office apps (macro execution)
+
+```kql
+DeviceProcessEvents
+| where TimeGenerated > ago(7d)
+| where InitiatingProcessFileName in~ ("winword.exe", "excel.exe", "powerpnt.exe", "outlook.exe")
+| where FileName in~ ("cmd.exe", "powershell.exe", "wscript.exe", "cscript.exe", "mshta.exe")
+| project Timestamp, DeviceName, AccountName, InitiatingProcessFileName, FileName, ProcessCommandLine
+```
+
+### Base64-encoded commands in process arguments
+
+```kql
+DeviceProcessEvents
+| where TimeGenerated > ago(7d)
+| where ProcessCommandLine matches regex @"[A-Za-z0-9+/]{100,}={0,2}"
+| extend DecodedAttempt = base64_decode_tostring(extract(@"([A-Za-z0-9+/]{100,}={0,2})", 1, ProcessCommandLine))
+| project Timestamp, DeviceName, FileName, ProcessCommandLine, DecodedAttempt
+```
+
+### New services or scheduled tasks created
+
+```kql
+DeviceEvents
+| where TimeGenerated > ago(1d)
+| where ActionType in ("ServiceInstalled", "ScheduledTaskCreated")
+| project Timestamp, DeviceName, AccountName, ActionType, AdditionalFields
+```
+
+### Credential dumping indicators - LSASS access
+
+```kql
+DeviceEvents
+| where TimeGenerated > ago(1d)
+| where ActionType == "CreateRemoteThreadApiCall"
+| where FileName =~ "lsass.exe"
+| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine
+```
+
+> **See also:** [Security](/docs/cheatsheets/security-cheatsheet) - nmap, netcat, and post-exploitation reference for host-level investigation once a suspicious process is identified.
+
+---
+
+## Threat Hunting - Network 🔬
+
+### Connections to uncommon ports (potential C2 or exfiltration)
+
+```kql
+DeviceNetworkEvents
+| where TimeGenerated > ago(1d)
+| where RemotePort !in (80, 443, 53, 22, 25, 587, 465, 8080, 8443)
+| where RemoteIPType == "Public"
+| summarize Count = count() by DeviceName, RemoteIP, RemotePort, InitiatingProcessFileName
+| where Count < 5  // low count = potentially unusual, not noisy
+| sort by Count asc
+```
+
+### Beaconing detection - regular periodic outbound connections
+
+```kql
+DeviceNetworkEvents
+| where TimeGenerated > ago(24h)
+| where RemoteIPType == "Public"
+| sort by DeviceName asc, RemoteIP asc, RemotePort asc, TimeGenerated asc
+| serialize
+| extend Interval   = TimeGenerated - prev(TimeGenerated),
+         PrevDevice = prev(DeviceName),
+         PrevIP     = prev(RemoteIP),
+         PrevPort   = prev(RemotePort)
+| where PrevDevice == DeviceName and PrevIP == RemoteIP and PrevPort == RemotePort
+| summarize
+    ConnectionCount = count(),
+    AvgInterval     = avg(Interval),
+    StdDevInterval  = stdev(Interval / 1s)  // stdev of timespan returns real (seconds)
+  by DeviceName, RemoteIP, RemotePort
+| where ConnectionCount > 20
+| where StdDevInterval < 30  // very regular = suspicious (threshold in seconds)
+```
+
+### DNS over HTTPS / large DNS responses (tunnelling)
+
+```kql
+DeviceNetworkEvents
+| where TimeGenerated > ago(1d)
+| where RemotePort == 443
+| where RemoteIPType == "Public"
+| summarize
+    BytesSent     = sum(SentBytes),
+    BytesReceived = sum(ReceivedBytes),
+    Count         = count()
+  by DeviceName, RemoteIP, InitiatingProcessFileName
+| where BytesSent > 10000000  // >10 MB sent to a single IP
+```
+
+### Lateral movement - SMB/RDP/WinRM to internal hosts
+
+```kql
+DeviceNetworkEvents
+| where TimeGenerated > ago(1d)
+| where RemotePort in (445, 3389, 5985, 5986)
+| where RemoteIPType == "Private"
+| summarize Count = count() by DeviceName, RemoteIP, RemotePort, InitiatingProcessFileName
+| sort by Count desc
+```
+
+### Connections to TI-matched IPs
+
+```kql
+ThreatIntelligenceIndicator
+| where TimeGenerated > ago(14d)
+| where isnotempty(NetworkIP)
+| join kind=inner (
+    DeviceNetworkEvents
+    | where TimeGenerated > ago(1d)
+  ) on $left.NetworkIP == $right.RemoteIP
+| project Timestamp, DeviceName, RemoteIP, RemotePort, ThreatType, ConfidenceScore, InitiatingProcessFileName
+```
+
+---
+
+## Threat Hunting - Identity & Authentication 🔬
+
+### Failed logins - brute-force or password spray
+
+```kql
+SigninLogs
+| where TimeGenerated > ago(1d)
+| where ResultType != "0"  // 0 = success
+| summarize
+    Failures    = count(),
+    UniqueUsers = dcount(UserPrincipalName),
+    UniqueIPs   = dcount(IPAddress)
+  by IPAddress, AppDisplayName
+| where Failures > 50
+| sort by Failures desc
+```
+
+### Password spray pattern - one IP, many users, few attempts each
+
+```kql
+SigninLogs
+| where TimeGenerated > ago(1d)
+| where ResultType != "0"
+| summarize
+    FailedUsers    = dcount(UserPrincipalName),
+    TotalAttempts  = count()
+  by IPAddress
+| where FailedUsers > 20 and TotalAttempts < FailedUsers * 3
+```
+
+### Impossible travel - same user, two locations within short window
+
+```kql
+SigninLogs
+| where TimeGenerated > ago(1d)
+| where ResultType == "0"
+| summarize
+    Locations = make_set(Location),
+    IPs       = make_set(IPAddress),
+    LogonTimes = make_list(TimeGenerated)
+  by UserPrincipalName
+| where array_length(Locations) > 1
+```
+
+### MFA fatigue - many MFA prompts in a short period
+
+```kql
+SigninLogs
+| where TimeGenerated > ago(1h)
+| where AuthenticationRequirement == "multiFactorAuthentication"
+| where ResultType in ("50074", "50076", "500121")  // MFA denied or timed out
+| summarize MFADenials = count() by UserPrincipalName, IPAddress
+| where MFADenials > 10
+```
+
+### Legacy authentication protocols (no MFA support)
+
+```kql
+SigninLogs
+| where TimeGenerated > ago(7d)
+| where ClientAppUsed in ("Exchange ActiveSync", "IMAP4", "POP3", "SMTP Auth", "Other clients")
+| summarize Count = count() by UserPrincipalName, ClientAppUsed, IPAddress
+| sort by Count desc
+```
+
+### Windows failed logons (EventID 4625) - workstation
+
+```kql
+SecurityEvent
+| where TimeGenerated > ago(1d)
+| where EventID == 4625
+| summarize Failures = count() by TargetAccount, IpAddress, LogonType
+| where Failures > 10
+| sort by Failures desc
+```
+
+### Account created outside business hours
+
+```kql
+AuditLogs
+| where TimeGenerated > ago(7d)
+| where OperationName == "Add user"
+| extend Hour = hourofday(TimeGenerated)
+| where Hour !between (8 .. 18)
+| project TimeGenerated, InitiatedBy, TargetResources
+```
+
+### Admin role assignments
+
+```kql
+AuditLogs
+| where TimeGenerated > ago(7d)
+| where OperationName in ("Add member to role", "Add eligible member to role")
+| extend Actor  = tostring(InitiatedBy.user.userPrincipalName)
+| extend Target = tostring(TargetResources[0].displayName)
+| extend Role   = tostring(TargetResources[0].modifiedProperties[0].newValue)
+| project TimeGenerated, Actor, Target, Role
+```
+
+> **See also:** [Azure - Entra ID](/docs/cheatsheets/azure-cheatsheet) for managing users, roles, and Conditional Access policies. [PowerShell - Microsoft Sentinel](/docs/cheatsheets/powershell-cheatsheet) for bulk watchlist operations and incident automation.
+
+---
+
+## Threat Hunting - Email 🔬
+
+### Emails with malicious verdicts delivered to inbox
+
+```kql
+EmailEvents
+| where TimeGenerated > ago(7d)
+| where ThreatTypes has_any ("Malware", "Phish", "High confidence phish")
+| where DeliveryAction == "Delivered"
+| project Timestamp, SenderFromAddress, RecipientEmailAddress, Subject, ThreatTypes, UrlCount, AttachmentCount
+```
+
+### Phishing links clicked by users
+
+```kql
+UrlClickEvents
+| where TimeGenerated > ago(7d)
+| where ActionType == "ClickAllowed"
+| where ThreatTypes has "Phish"
+| project Timestamp, AccountUpn, Url, IsClickedThrough, IPAddress
+```
+
+### Malicious attachments - by file type
+
+```kql
+EmailAttachmentInfo
+| where TimeGenerated > ago(7d)
+| where ThreatTypes has "Malware"
+| extend Extension = tostring(split(FileName, ".")[-1])
+| summarize Count = count() by Extension, ThreatTypes
+| sort by Count desc
+```
+
+### Bulk mail from a single sender (potential compromise)
+
+```kql
+EmailEvents
+| where TimeGenerated > ago(1d)
+| where SenderFromDomain !endswith "yourdomain.com"
+| summarize Count = count() by SenderFromAddress, SenderFromDomain
+| where Count > 100
+| sort by Count desc
+```
+
+---
+
+## Threat Hunting - Azure Activity 🔬
+
+### Mass resource deletion or modification
+
+```kql
+AzureActivity
+| where TimeGenerated > ago(1d)
+| where ActivityStatusValue == "Success"
+| where OperationNameValue has_any ("delete", "deallocate", "stop")
+| summarize
+    OperationCount = count(),
+    Operations     = make_set(OperationNameValue, 20)
+  by Caller, CallerIpAddress
+| where OperationCount > 20
+| sort by OperationCount desc
+```
+
+### Privilege escalation - role assignment writes
+
+```kql
+AzureActivity
+| where TimeGenerated > ago(7d)
+| where OperationNameValue =~ "Microsoft.Authorization/roleAssignments/write"
+| where ActivityStatusValue == "Success"
+| extend Props = todynamic(Properties)
+| project TimeGenerated, Caller, CallerIpAddress, ResourceGroup, SubscriptionId,
+          RoleDefinitionId = tostring(Props.requestbody)
+```
+
+### Security control changes (policy, NSG, Defender)
+
+```kql
+AzureActivity
+| where TimeGenerated > ago(7d)
+| where OperationNameValue has_any (
+    "Microsoft.Security/",
+    "Microsoft.Authorization/policyAssignments",
+    "Microsoft.Network/networkSecurityGroups"
+  )
+| where ActivityStatusValue == "Success"
+| project TimeGenerated, Caller, CallerIpAddress, OperationNameValue, ResourceGroup
+| sort by TimeGenerated desc
+```
+
+### Failed ARM operations by caller (misconfiguration or denial pattern)
+
+```kql
+AzureActivity
+| where TimeGenerated > ago(1d)
+| where ActivityStatusValue == "Failed"
+| summarize
+    FailureCount = count(),
+    Operations   = make_set(OperationNameValue, 10)
+  by Caller, CallerIpAddress, ResourceGroup
+| where FailureCount > 10
+| sort by FailureCount desc
+```
+
+### Key Vault secret access audit
+
+```kql
+AzureDiagnostics
+| where TimeGenerated > ago(1d)
+| where ResourceType == "VAULTS"
+| where OperationName in ("SecretGet", "SecretList", "KeyGet", "KeyDecrypt")
+| where ResultType == "Success"
+| project TimeGenerated,
+          Identity   = identity_claim_oid_g,
+          Operation  = OperationName,
+          SecretId   = id_s,
+          CallerIP   = CallerIPAddress
+| sort by TimeGenerated desc
+```
+
+### Activity from a new or unexpected caller IP
+
+```kql
+AzureActivity
+| where TimeGenerated > ago(30d)
+| where ActivityStatusValue == "Success"
+| summarize
+    FirstSeen = min(TimeGenerated),
+    LastSeen  = max(TimeGenerated),
+    OpCount   = count()
+  by Caller, CallerIpAddress
+| where FirstSeen > ago(2d)   // IP not seen before the last 2 days
+| sort by FirstSeen desc
+```
+
+> **See also:** [Security - Incident Response](/docs/cheatsheets/security-cheatsheet) for host-level triage commands once a suspicious caller is identified.
+
+---
+
+## Alerts & Incidents
+
+### All active incidents by severity
+
+```kql
+SecurityIncident
+| where TimeGenerated > ago(7d)
+| where Status != "Closed"
+| summarize Count = count() by Severity, Classification
+| sort by Count desc
+```
+
+### Incidents with the most alerts
+
+```kql
+SecurityIncident
+| where TimeGenerated > ago(30d)
+| extend AlertCount = array_length(AlertIds)
+| sort by AlertCount desc
+| project TimeGenerated, Title, Severity, Status, AlertCount, Owner
+| take 20
+```
+
+### Unassigned high/medium incidents
+
+```kql
+SecurityIncident
+| where TimeGenerated > ago(7d)
+| where Status == "New"
+| where Severity in ("High", "Medium")
+| where isnull(Owner) or isempty(tostring(Owner.assignedTo))
+| project TimeGenerated, Title, Severity, AlertIds
+```
+
+### All alerts for a specific device
+
+```kql
+SecurityAlert
+| where TimeGenerated > ago(30d)
+| extend Entities = todynamic(Entities)
+| mv-expand Entity = Entities
+| where Entity.Type == "host"
+| where tolower(tostring(Entity.HostName)) contains "device-name-here"
+| project TimeGenerated, AlertName, Severity, Description
+```
+
+### Alert volume trend by provider
+
+```kql
+SecurityAlert
+| where TimeGenerated > ago(30d)
+| summarize Count = count() by bin(TimeGenerated, 1d), ProductName
+| render timechart
+```
+
+### Entities linked to a specific alert name
+
+```kql
+AlertEvidence
+| where TimeGenerated > ago(7d)
+| where AlertId in (
+    SecurityAlert
+    | where AlertName contains "Brute Force"
+    | project SystemAlertId
+  )
+| project Timestamp, AlertId, EntityType, EvidenceRole, RemoteIP, AccountName, DeviceName
+```
+
+---
+
+## Useful Patterns
+
+### `mv-expand` - expand an array column into individual rows
+
+```kql
+SecurityIncident
+| mv-expand AlertIds
+| extend AlertId = tostring(AlertIds)
+| join kind=inner SecurityAlert on $left.AlertId == $right.SystemAlertId
+| project IncidentTitle = Title, AlertName, Severity
+```
+
+### `parse_json` - read dynamic/JSON columns
+
+```kql
+DeviceEvents
+| where ActionType == "ScheduledTaskCreated"
+| extend TaskDetails = parse_json(AdditionalFields)
+| extend TaskName    = tostring(TaskDetails.TaskName)
+| extend TaskAction  = tostring(TaskDetails.TaskAction)
+| project Timestamp, DeviceName, TaskName, TaskAction
+```
+
+### `bag_keys` - discover all keys in a dynamic field
+
+```kql
+SigninLogs
+| take 1
+| extend Keys = bag_keys(todynamic(DeviceDetail))
+```
+
+### `parse_url` - extract parts of a URL
+
+```kql
+DeviceNetworkEvents
+| extend Parsed   = parse_url(RemoteUrl)
+| extend Hostname = tostring(Parsed.Host)
+| extend Path     = tostring(Parsed.Path)
+| extend Scheme   = tostring(Parsed.Scheme)
+```
+
+### `ipv4_is_private` - filter public vs private IPs
+
+```kql
+DeviceNetworkEvents
+| where not(ipv4_is_private(RemoteIP))
+| where RemoteIP != "127.0.0.1"
+```
+
+### `geo_info_from_ip_address` - enrich with GeoIP (Sentinel)
+
+```kql
+SigninLogs
+| extend GeoInfo  = geo_info_from_ip_address(IPAddress)
+| extend Country  = tostring(GeoInfo.country)
+| extend City     = tostring(GeoInfo.city)
+| where Country !in ("United Kingdom", "United States")
+```
+
+### `externaldata` - load a blocklist from blob storage
+
+```kql
+let BlockedDomains = externaldata(Domain: string)
+    [@"https://<storage>.blob.core.windows.net/<container>/blocklist.txt"]
+    with (format="txt", ignoreFirstRecord=false);
+DeviceNetworkEvents
+| where TimeGenerated > ago(1d)
+| where RemoteUrl has_any (BlockedDomains)
+```
+
+### Watchlist lookup (Sentinel)
+
+```kql
+let WatchlistIPs = _GetWatchlist("MaliciousIPs") | project SearchKey;
+DeviceNetworkEvents
+| where TimeGenerated > ago(1d)
+| where RemoteIP in (WatchlistIPs)
+```
+
+### Cross-workspace queries (Sentinel multi-workspace)
+
+```kql
+// Query a named workspace by resource ID or alias
+workspace("secondary-workspace").SecurityEvent
+| where TimeGenerated > ago(1h)
+| where EventID == 4625
+
+// Union across multiple workspaces (multi-tenant / MSSPs)
+union
+    workspace("workspace-emea").SigninLogs,
+    workspace("workspace-apac").SigninLogs
+| where TimeGenerated > ago(1h)
+| summarize Failures = countif(ResultType != "0") by UserPrincipalName
+
+// Cross-cluster query (ADX)
+cluster("mycluster.westeurope").database("mydb").MyTable
+| take 10
+```
+
+### Persisted functions (save reusable KQL)
+
+```kql
+// Define once in ADX / Sentinel workspace as a saved function:
+// Name:       GetSuspiciousProcesses
+// Parameters: lookback:timespan = 1d
+DeviceProcessEvents
+| where TimeGenerated > ago(lookback)
+| where FileName in~ ("mimikatz.exe", "psexec.exe", "nc.exe", "meterpreter.exe")
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine
+
+// Invoke it later (lookback is optional - defaults to 1d)
+GetSuspiciousProcesses(7d)
+```
+
+### `arg()` - query Azure Resource Graph from Log Analytics
+
+```kql
+// Correlate log data with live resource metadata
+let VMs = arg("").Resources
+    | where type =~ "microsoft.compute/virtualmachines"
+    | project vmId = tolower(id), tags, location, sku = properties.hardwareProfile.vmSize;
+DeviceNetworkEvents
+| where TimeGenerated > ago(1h)
+| extend vmId = tolower(DeviceId)
+| join kind=leftouter VMs on vmId
+| project Timestamp, DeviceName, RemoteIP, location, sku
+```
+
+### Render options
+
+```kql
+| render timechart    // line chart over time
+| render barchart     // bar chart
+| render piechart     // pie chart
+| render table        // explicit table (default)
+| render scatterchart // scatter plot (good for anomalies)
+```
+
+---
+
+## Operational Monitoring
+
+KQL is not only for threat hunting - the same engine backs Azure Monitor, so it is how you answer "is the host up?", "did anything go down?", and "are requests healthy?". These run over the platform tables: `Heartbeat` and `Perf` (VMs via the Azure Monitor Agent), `Event`/`Syslog` (OS logs), and `AppRequests`/`AppExceptions`/`AppDependencies` (Application Insights).
+
+### Hosts that stopped reporting (down / disconnected)
+
+```kql
+// Anything that sent a heartbeat in the last 24h but nothing in the last 15m
+Heartbeat
+| where TimeGenerated > ago(24h)
+| summarize LastSeen = max(TimeGenerated) by Computer
+| where LastSeen < ago(15m)
+| extend DownFor = now() - LastSeen
+| sort by LastSeen asc
+```
+
+### Availability percentage per host over a window
+
+```kql
+// Heartbeats arrive ~1/min; compare observed vs expected to get uptime %
+let window = 24h;
+let expected = window / 1m;
+Heartbeat
+| where TimeGenerated > ago(window)
+| summarize Beats = count() by Computer
+| extend AvailabilityPct = round(100.0 * Beats / toreal(expected), 2)
+| sort by AvailabilityPct asc
+```
+
+### Downtime windows (gaps between heartbeats)
+
+```kql
+Heartbeat
+| where TimeGenerated > ago(7d)
+| sort by Computer asc, TimeGenerated asc
+| serialize
+| extend PrevBeat = prev(TimeGenerated), PrevComputer = prev(Computer)
+| where Computer == PrevComputer
+| extend Gap = TimeGenerated - PrevBeat
+| where Gap > 5m            // a real outage, not a missed beat
+| project Computer, OutageStart = PrevBeat, OutageEnd = TimeGenerated, Gap
+| sort by Gap desc
+```
+
+### High CPU hosts
+
+```kql
+Perf
+| where TimeGenerated > ago(1h)
+| where ObjectName == "Processor" and CounterName == "% Processor Time"
+| where InstanceName == "_Total"
+| summarize AvgCpu = avg(CounterValue), MaxCpu = max(CounterValue) by Computer
+| where AvgCpu > 80
+| sort by AvgCpu desc
+```
+
+### Low available memory
+
+```kql
+Perf
+| where TimeGenerated > ago(1h)
+| where CounterName == "Available MBytes"
+| summarize MinFreeMB = min(CounterValue) by Computer
+| where MinFreeMB < 512
+| sort by MinFreeMB asc
+```
+
+### Low free disk space
+
+```kql
+Perf
+| where TimeGenerated > ago(30m)
+| where ObjectName == "LogicalDisk" and CounterName == "% Free Space"
+| where InstanceName !in ("_Total", "HarddiskVolume1")
+| summarize FreePct = min(CounterValue) by Computer, InstanceName
+| where FreePct < 15
+| sort by FreePct asc
+```
+
+### Unexpected reboots and shutdowns (Windows)
+
+```kql
+Event
+| where TimeGenerated > ago(7d)
+| where EventLog == "System"
+| where EventID in (6008, 1074, 6005, 6006)
+| extend Meaning = case(
+    EventID == 6008, "Unexpected shutdown",
+    EventID == 1074, "Reboot/shutdown initiated",
+    EventID == 6005, "Event log started (boot)",
+    EventID == 6006, "Event log stopped (clean shutdown)",
+    "Other")
+| project TimeGenerated, Computer, EventID, Meaning, RenderedDescription
+| sort by TimeGenerated desc
+```
+
+### Windows service stopped (Service Control Manager)
+
+```kql
+Event
+| where TimeGenerated > ago(24h)
+| where Source == "Service Control Manager" and EventID == 7036
+| where RenderedDescription has "stopped"
+| project TimeGenerated, Computer, RenderedDescription
+| sort by TimeGenerated desc
+```
+
+### Linux errors and service failures (Syslog)
+
+```kql
+Syslog
+| where TimeGenerated > ago(1h)
+| where SeverityLevel in ("err", "crit", "alert", "emerg")
+| summarize Count = count(), Sample = any(SyslogMessage) by Computer, ProcessName, SeverityLevel
+| sort by Count desc
+```
+
+### Failed requests by endpoint (Application Insights)
+
+```kql
+AppRequests
+| where TimeGenerated > ago(1h)
+| summarize Total = count(), Failed = countif(Success == false) by Name, AppRoleName
+| extend FailureRate = round(100.0 * Failed / Total, 2)
+| where Failed > 0
+| sort by FailureRate desc
+```
+
+### Request latency percentiles (p50 / p95 / p99)
+
+```kql
+AppRequests
+| where TimeGenerated > ago(1h)
+| summarize
+    p50 = percentile(DurationMs, 50),
+    p95 = percentile(DurationMs, 95),
+    p99 = percentile(DurationMs, 99),
+    Count = count()
+  by Name
+| sort by p95 desc
+```
+
+### Request rate over time (throughput trend)
+
+```kql
+AppRequests
+| where TimeGenerated > ago(6h)
+| summarize Requests = count() by bin(TimeGenerated, 5m), AppRoleName
+| render timechart
+```
+
+### Top exceptions by impact
+
+```kql
+AppExceptions
+| where TimeGenerated > ago(24h)
+| summarize Count = count(), Users = dcount(UserId) by ProblemId, Type, OuterMessage
+| sort by Count desc
+| take 20
+```
+
+### Slowest and most error-prone dependencies (downstream health)
+
+```kql
+AppDependencies
+| where TimeGenerated > ago(1h)
+| summarize Calls = count(), Failures = countif(Success == false),
+            p95 = percentile(DurationMs, 95)
+  by Target, DependencyType
+| extend FailureRate = round(100.0 * Failures / Calls, 2)
+| sort by FailureRate desc, p95 desc
+```
+
+### Availability SLO - rolling success rate vs target
+
+```kql
+let slo = 99.9;
+AppRequests
+| where TimeGenerated > ago(30d)
+| summarize Total = count(), Good = countif(Success == true)
+| extend AchievedPct = round(100.0 * Good / Total, 3)
+| extend ErrorBudgetBurned = round((slo - AchievedPct) / (100 - slo) * 100, 1)
+| project AchievedPct, SloTarget = slo, ErrorBudgetBurnedPct = ErrorBudgetBurned
+```
+
+### Ingestion volume and cost by table (data hygiene)
+
+```kql
+Usage
+| where TimeGenerated > ago(30d)
+| where IsBillable == true
+| summarize BillableGB = round(sum(Quantity) / 1000, 2) by DataType
+| sort by BillableGB desc
+```
+
+> **See also:** [Azure - Azure Monitor & Log Analytics](/docs/cheatsheets/azure-cheatsheet) for agent deployment, diagnostic settings, and alert-rule creation against these queries. [Defender XDR - Workbooks](/docs/cheatsheets/defender-xdr-cheatsheet) for turning them into dashboards.
+
+---
+
+## Sentinel Analytic Rules
+
+Analytic rules run as scheduled queries. These patterns produce low-noise, actionable alerts.
+
+### Rule query structure
+
+```kql
+// 1. Define constants at the top with let - makes tuning easy
+let LookbackPeriod = 1h;
+let FailThreshold  = 10;
+let ExcludedAccounts = dynamic(["health-check", "monitoring-svc"]);
+
+// 2. Filter aggressively early - reduces cost and latency
+SecurityEvent
+| where TimeGenerated > ago(LookbackPeriod)
+| where EventID == 4625
+| where TargetAccount !in (ExcludedAccounts)
+
+// 3. Aggregate to get an entity-level signal (not per-event noise)
+| summarize
+    FailCount = count(),
+    FirstSeen = min(TimeGenerated),
+    LastSeen  = max(TimeGenerated),
+    SourceIPs = make_set(IpAddress, 10)
+  by TargetAccount, Computer
+| where FailCount > FailThreshold
+
+// 4. Project only the columns needed for entity mapping
+| project TargetAccount, Computer, FailCount, FirstSeen, LastSeen, SourceIPs
+```
+
+### Suppress known-good activity with a watchlist
+
+```kql
+let TrustedIPs   = _GetWatchlist("TrustedRanges") | project SearchKey;
+let SvcAccounts  = _GetWatchlist("ServiceAccounts") | project SearchKey;
+DeviceNetworkEvents
+| where TimeGenerated > ago(1h)
+| where RemoteIPType == "Public"
+| where RemoteIP !in (TrustedIPs)
+| where InitiatingProcessAccountName !in (SvcAccounts)
+| where RemotePort !in (80, 443)
+```
+
+### Correlate events with threat intelligence
+
+```kql
+let TIIndicators =
+    ThreatIntelligenceIndicator
+    | where TimeGenerated > ago(14d)
+    | where isnotempty(NetworkIP)
+    | where ConfidenceScore > 50
+    | summarize by NetworkIP;
+DeviceNetworkEvents
+| where TimeGenerated > ago(1h)
+| join kind=inner TIIndicators on $left.RemoteIP == $right.NetworkIP
+| project Timestamp, DeviceName, RemoteIP, RemotePort, InitiatingProcessFileName
+```
+
+### Multi-stage correlation (alert chaining)
+
+```kql
+// Stage 1: suspicious recon
+let ReconDevices =
+    DeviceProcessEvents
+    | where TimeGenerated > ago(30m)
+    | where FileName in~ ("whoami.exe", "ipconfig.exe", "net.exe", "nltest.exe")
+    | summarize ReconCount = count() by DeviceId, DeviceName
+    | where ReconCount > 5;
+// Stage 2: lateral movement from those same devices
+DeviceNetworkEvents
+| where TimeGenerated > ago(1h)
+| where RemotePort in (445, 3389, 5985)
+| join kind=inner ReconDevices on DeviceId
+| project Timestamp, DeviceName, RemoteIP, RemotePort, ReconCount
+```
+
+> **See also:** [PowerShell - Microsoft Sentinel](/docs/cheatsheets/powershell-cheatsheet) for automation rules, watchlist management, and incident enrichment via the Sentinel REST API.
+
+---
+
+## Anti-patterns
+
+- ⚠️ **No time filter on queries** - a query without `| where TimeGenerated > ago(...)` scans the entire table (potentially months of data), is extremely slow, and can exhaust query limits. Always scope the time range first.
+- 🔬 **`contains` over `has` for whole-word matches** - `contains` does a character-level substring scan; `has` uses the inverted index and is orders of magnitude faster for whole-token matching. Use `has` for single words and `has_any` for sets.
+- 🔬 **`take N` as a "sample"** - `take` returns arbitrary rows in no guaranteed order; it is not a random or representative sample. Use `sample N` for random sampling or `top N by` for intentional ranking.
+- 🚨 **String concatenation to build KQL** - building query strings by concatenating user input enables KQL injection. Use `declare query_parameters` with typed parameters for any dynamic values.
+- ⚠️ **Joining two large unfiltered tables** - joining unfiltered high-volume tables can produce enormous intermediate datasets and time out. Filter both sides with time and column predicates before the `join`.
+- 🔬 **`mv-expand` on a high-cardinality array without subsequent scoping** - `mv-expand` on a large array column multiplies row count dramatically. Always add a `where`, `take`, or `top` after `mv-expand` to bound the result set.

@@ -14,6 +14,12 @@ tokens:
   brand_infix: ldo
   registry_url: registry.terraform.io/namespaces/libre-devops
   docs_url: libredevops.org/docs/documents
+  # PowerShell house conventions. Every helper noun carries the prefix so the module can never
+  # clash with a built-in cmdlet or another module: Write-LdoLog, Invoke-LdoTerraformPlan.
+  # `just new-profile` derives both from your organisation name, so neither is a question you
+  # have to answer; override them here if your module is named differently.
+  cmdlet_prefix: Ldo
+  ps_module_name: LibreDevOpsHelpers
 
 # developer{} in the Microsoft 365 app manifest. All four are required and must resolve over HTTPS.
 publisher:

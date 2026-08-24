@@ -1,0 +1,84 @@
+# {{brand_short}} Sentinel Rule Author. Source of truth for the rendered declarative agent manifest.
+# Render with: just render sentinel-rule-author
+---
+id: sentinel-rule-author
+name: "{{brand_short}} Sentinel Rule Author"
+description: >-
+  Writes and reviews Microsoft Sentinel analytics rules, and understands the platform they sit in:
+  connectors to tables to rules to alerts to incidents to automation. Enforces the hard limits
+  (query length, the rejection of search * and union *, the 5 minute to 14 day schedule range and
+  the interval versus lookback relationship, 10 entity mappings of 3 identifiers, 500 entities and
+  64 KB per alert, the 150 alert caps on event and alert grouping, 24 hour suppression) and treats
+  a missing entity mapping as a defect. Knows Sentinel is Defender-portal only after March 2027.
+
+# Concatenated in order into the manifest `instructions` field, which caps at 8,000 characters.
+instructions:
+  - shared/literal-execution.md
+  - shared/house-style.md
+  - sentinel/purpose.md
+  - sentinel/rule.md
+  - sentinel/workflow.md
+  - shared/grounding.md
+  - shared/knowledge-precedence.md
+  - shared/output-contract.md
+
+capabilities:
+  # Max 4 sites. Each URL takes at most two path segments and no query string.
+  - name: WebSearch
+    sites:
+      - url: https://learn.microsoft.com/en-us/azure
+      - url: https://learn.microsoft.com/en-us/kusto
+      - url: https://learn.microsoft.com/en-us/unified-secops
+      - url: https://{{docs_url}}
+
+# The platform pages are uploaded alongside the rule pages on purpose: most rule problems are
+# really problems with the link either side of the rule, and an agent that only knows the rule form
+# gives advice that is locally correct and operationally wrong.
+knowledge_files:
+  - sentinel-overview.txt
+  - sentinel-threat-detection.txt
+  - sentinel-scheduled-rules.txt
+  - sentinel-create-rules.txt
+  - sentinel-entity-mapping.txt
+  - sentinel-entities-reference.txt
+  - sentinel-nrt-rules.txt
+  - sentinel-automation-rules.txt
+  - sentinel-custom-details.txt
+  - kql-best-practices.txt
+
+user_overrides:
+  - path: "$.capabilities[?(@.name == 'WebSearch')]"
+    allowed_actions: [remove]
+
+behavior_overrides:
+  # NOT discouraging model knowledge: the agent needs KQL fluency and attacker context that no
+  # single uploaded page states. Knowledge precedence makes the platform limits win on facts.
+  special_instructions:
+    discourage_model_knowledge: false
+  default_response_mode: Auto
+
+disclaimer:
+  text: >-
+    A rule design, not a deployed detection. Simulate it, tune it against your own data, and review
+    the false positive rate before it is allowed to create incidents.
+
+conversation_starters:
+  - title: New detection
+    text: "Design a Sentinel scheduled rule for this behaviour, with entity mapping, schedule and ATT&CK mapping."
+  - title: Review a rule
+    text: "Review this analytics rule and list only what is wrong or missing, including the limits it breaches."
+  - title: Hunt to rule
+    text: "Turn this hunting query into a production analytics rule, and tell me what tuning it still needs."
+  - title: Why so noisy
+    text: "This rule creates too many incidents. Fix the grouping, threshold and suppression rather than the query."
+  - title: Entity mapping
+    text: "Map the entities for this query properly, and explain which identifiers are strong and why."
+  - title: Scheduled or NRT
+    text: "Should this be a scheduled rule or near-real-time, given the ingestion delay on this source?"
+  - title: How Sentinel fits together
+    text: "Explain how a connector, a rule, an alert, an incident and an automation rule relate to each other."
+
+package:
+  short_name: "{{brand_short}} Sentinel"
+  full_name: "{{brand_name}} Sentinel Rule Author"
+  short_description: Writes and reviews Sentinel analytics rules.

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.18/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.18",
+  "version": "1.0.0",
+  "id": "5182cfed-0127-5f99-8b1d-d4cb5ea222b7",
+  "developer": {
+    "name": "Libre DevOps",
+    "websiteUrl": "https://libredevops.org",
+    "privacyUrl": "https://github.com/libre-devops/copilot-agents#privacy",
+    "termsOfUseUrl": "https://github.com/libre-devops/copilot-agents/blob/main/LICENSE"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "LDO Sentinel",
+    "full": "Libre DevOps Sentinel Rule Author"
+  },
+  "description": {
+    "short": "Writes and reviews Sentinel analytics rules.",
+    "full": "Writes and reviews Microsoft Sentinel analytics rules, and understands the platform they sit in: connectors to tables to rules to alerts to incidents to automation. Enforces the hard limits (query length, the rejection of search * and union *, the 5 minute to 14 day schedule range and the interval versus lookback relationship, 10 entity mappings of 3 identifiers, 500 entities and 64 KB per alert, the 150 alert caps on event and alert grouping, 24 hour suppression) and treats a missing entity mapping as a defect. Knows Sentinel is Defender-portal only after March 2027."
+  },
+  "accentColor": "#15803D",
+  "copilotAgents": {
+    "declarativeAgents": [
+      {
+        "id": "sentinel-rule-author",
+        "file": "declarativeAgent.json"
+      }
+    ]
+  }
+}

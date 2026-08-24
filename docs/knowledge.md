@@ -11,6 +11,10 @@ is crossed.
 | `terraform-author` | `WebSearch` | `libredevops.org/docs/documents`, the HashiCorp language reference, the Libre DevOps registry namespace, Microsoft Learn's Azure documentation |
 | `logic-app-author` | `WebSearch` | `libredevops.org/docs/documents`, Microsoft Learn's Azure and connector documentation |
 | `agent-author` | `WebSearch` | Microsoft Learn's Microsoft 365 and Teams documentation, `developer.microsoft.com/json-schemas`, `libredevops.org/docs/documents` |
+| `kql-hunt-author` | `WebSearch` | Microsoft Learn's Kusto, Defender XDR and Azure documentation, `libredevops.org/docs/documents` |
+| `sentinel-rule-author` | `WebSearch` | Microsoft Learn's Azure, Kusto and unified security operations documentation, `libredevops.org/docs/documents` |
+| `mde-exclusion-reviewer` | `WebSearch` | Microsoft Learn's Defender for Endpoint, Defender XDR and Intune documentation, `libredevops.org/docs/documents` |
+| `powershell-author` | `WebSearch` | Microsoft Learn's PowerShell and Azure documentation, the PowerShell Gallery, `libredevops.org/docs/documents` |
 
 `WebSearch` is the only capability that works without a Microsoft 365 Copilot licence or metered
 usage in the tenant, which makes it the right default for an open source agent that strangers will
@@ -23,7 +27,7 @@ install.
   `https://contoso.com/projects/mark-8/beta-program` is not.
 - No query string.
 
-Both agents expose their `WebSearch` capability through `user_overrides`, so an operator can toggle
+Every agent exposes its `WebSearch` capability through `user_overrides`, so an operator can toggle
 it off in the Copilot UI without a new package.
 
 ## EmbeddedKnowledge, and why it is off by default
@@ -78,6 +82,10 @@ exact bytes an agent is grounded in show up in a diff.
 | `terraform-author` | the Terraform Standard, the Azure Naming Convention |
 | `logic-app-author` | the Azure Logic App Standard, the workflow definition schema |
 | `agent-author` | the declarative agent manifest schema |
+| `kql-hunt-author` | the house KQL and Defender XDR cheatsheets, the Kusto best practices and join reference, the Defender XDR hunting schema and limits |
+| `sentinel-rule-author` | the Sentinel overview and rule types, scheduled and NRT rules, entity mapping and the entities reference, custom details, automation rules, Kusto best practices |
+| `mde-exclusion-reviewer` | Microsoft's never-exclude lists, the exclusion references, the ASR rules reference |
+| `powershell-author` | the PowerShell Standard |
 
 MDX is stripped to prose and code (fenced blocks are kept verbatim, since for a standards document
 they are the most valuable part) and JSON is pretty printed, because Agent Builder accepts

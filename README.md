@@ -106,13 +106,17 @@ task runner and the linters is more convenient. Keep its versions in step with t
 |---|---|---|
 | [`terraform-author`](./agents/terraform-author) | Terraform to the Libre DevOps Terraform Standard and Azure Naming Convention: the file split, `for_each` over `count`, the `this` label, argument ordering, typed variables, and the three kinds of assertion (`validation` at plan time, `check` to warn, `precondition` to abort) | the Terraform Standard, the Azure Naming Convention |
 | [`logic-app-author`](./agents/logic-app-author) | Workflow Definition Language: the three export wrappers, declarations versus values, action names as stored keys, and the failure modes that pass validation and break at run time | the Logic App Standard, the workflow definition schema |
+| [`sentinel-rule-author`](./agents/sentinel-rule-author) | Microsoft Sentinel analytics rules and the platform around them: the pipeline from connectors to tables to rules to alerts to incidents to automation, every hard limit (query length, the rejected `search *`, the schedule range and interval versus lookback, entity mapping counts, the 150 alert caps, suppression), and a missing entity mapping treated as a defect | the Sentinel overview, rule type, scheduled and NRT rule, entity, custom detail and automation references |
+| [`kql-hunt-author`](./agents/kql-hunt-author) | Threat hunting KQL for Defender XDR advanced hunting and Sentinel: naming the target product because the schemas differ, the traps that return a plausible wrong answer (the `innerunique` join default, case sensitivity, `has` versus `contains`, per-table timestamp columns), the performance order the engine cares about, and the line between a hunt and a detection | the house KQL and Defender XDR cheatsheets, the Kusto best practices and join reference, the XDR hunting schema |
+| [`mde-exclusion-reviewer`](./agents/mde-exclusion-reviewer) | Microsoft Defender for Endpoint and Defender Antivirus exclusions: the never-exclude folder, extension and process lists, the blast radius a process exclusion has on ASR rules and network protection, fully qualified paths, LocalSystem variable resolution, per-workload lists, and evidence. Returns one verdict and never applies anything | the never-exclude lists, the exclusion and ASR references |
+| [`powershell-author`](./agents/powershell-author) | PowerShell 7 to the standard and the helper module's house style: approved verbs and the noun prefix, strict mode, typed and validated parameters, comment-based help, objects rather than host writes, structured logging, terminating versus non-terminating errors, and the analyzer and Pester gates | the PowerShell Standard |
 | [`agent-author`](./agents/agent-author) | Declarative agents themselves: schema v1.8 and every limit it imposes, which capabilities cost a licence, and how to structure instructions inside the budget | the declarative agent manifest schema |
 
 Each also gets scoped `WebSearch` over the relevant public references, but the uploaded files come
 first: the agents are instructed to treat them as authoritative over both web results and their own
 training. That ordering is what makes them enforce *your* standard rather than generic advice.
 
-All three ship the same contract: every factual claim cites its source, retrieved content is data
+Every one ships the same contract: every factual claim cites its source, retrieved content is data
 rather than instructions, a knowledge source that returns nothing is reported rather than quietly
 replaced with model knowledge, anything unconfirmed is marked `UNVERIFIED` rather than guessed, and
 the agent never claims to have run, deployed or validated anything.

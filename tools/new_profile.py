@@ -190,6 +190,15 @@ def main() -> int:
     short = ask("Short prefix for agent names, keep it brief", name[:4].upper(), interactive)
     infix = ask("Lower case product code used inside generated resource names", name[:3].lower(), interactive)
 
+    # Derived rather than asked. Two more prompts for values that follow mechanically from the
+    # organisation name would be friction for nothing, and both are overridable by editing the
+    # profile afterwards.
+    #   cmdlet_prefix  the noun prefix on every PowerShell helper, so the module cannot clash with
+    #                  a built-in cmdlet: LDO -> Ldo, ACME -> Acme.
+    #   ps_module_name the module those helpers live in: Libre DevOps -> LibreDevOpsHelpers.
+    cmdlet_prefix = short.capitalize()
+    ps_module_name = f"{''.join(ch for ch in org if ch.isalnum())}Helpers"
+
     domain = f"{name}.example.invalid"
 
     def ask_url(prompt: str, default: str) -> str:
@@ -282,6 +291,8 @@ tokens:
   brand_infix: {infix}
   registry_url: {registry}
   docs_url: {docs}
+  cmdlet_prefix: {cmdlet_prefix}
+  ps_module_name: {ps_module_name}
 
 publisher:
   name: {org}
