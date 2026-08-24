@@ -24,10 +24,18 @@ sources:
     title: Libre DevOps Azure Logic App Standard
     url: https://raw.githubusercontent.com/libre-devops/libredevops-dot-org/main/content/docs/documents/azure-logic-app-standards.mdx
 
+  # The ANNOTATED schema rather than the raw upstream one, deliberately. The published schema is
+  # machine generated, describes itself in terms that restate property names, and REJECTS
+  # definitions Azure itself emits: validating the 87 workflow definitions in the Libre DevOps
+  # estate against it, only 13 of the 35 whole definitions pass. Grounding an agent in a schema
+  # that redlines correct code teaches it to write incorrect code.
+  #
+  # The annotated build carries 21 notes explaining the constructs and the run-time traps, plus 5
+  # corrections, each recorded in x-annotation.corrections with its reason. YAML rather than JSON
+  # because the notes render as readable literal blocks and it is 30 percent smaller.
   - name: logic-app-workflow-definition-schema.txt
-    title: Azure Logic Apps workflow definition schema (2016-06-01)
-    url: https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json
-    format: json
+    title: Azure Logic Apps workflow definition schema (2016-06-01), annotated
+    url: https://raw.githubusercontent.com/libre-devops/terraform-azapi-logic-app-workflow/main/schema/workflowdefinition.annotated.schema.yaml
 
   # The Workflow Definition Language reference, from the public azure-docs mirror. The Learn page
   # itself is generated from azure-docs-pr, which is private, so these are the fetchable originals.
